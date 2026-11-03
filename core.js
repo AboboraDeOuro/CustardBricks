@@ -1,3 +1,7 @@
+/* ============================================================
+   CustardBricks core.js — v5
+   Adições: category, models[] por jogo, IndexedDB ModelStore
+   ============================================================ */
 const CORE = (function () {
   'use strict';
   const DB_KEY = 'custardbricks_db_v4';
@@ -27,19 +31,16 @@ const CORE = (function () {
     { id:'fx_fire',     category:'effect', slot:'effect', name:'Chamas', price:500, icon:'🔥', rarity:'epic' },
     { id:'fx_static',   category:'effect', slot:'effect', name:'Estática CRT', price:700, icon:'📺', rarity:'epic' }
   ];
-
   const CUSTARD_PACKAGES = [
-    { id:'pkg_small',  custards:100,  bonus:0,    label:'R$ 4,90' },
-    { id:'pkg_medium', custards:500,  bonus:50,   label:'R$ 19,90' },
-    { id:'pkg_large',  custards:1500, bonus:300,  label:'R$ 49,90' },
-    { id:'pkg_huge',   custards:5000, bonus:1500, label:'R$ 149,90' }
+    { id:'pkg_small', custards:100, bonus:0, label:'R$ 4,90' },
+    { id:'pkg_medium', custards:500, bonus:50, label:'R$ 19,90' },
+    { id:'pkg_large', custards:1500, bonus:300, label:'R$ 49,90' },
+    { id:'pkg_huge', custards:5000, bonus:1500, label:'R$ 149,90' }
   ];
-
   const PRESET_CODES = {
     'WELCOME100':{custards:100}, 'V01LAUNCH':{custards:500},
     'CUSTARDLOVE':{custards:250}, 'SLENDY':{custards:150},
-    'FREEMONEY':{custards:50},   'CREEPYPASTA':{custards:300},
-    'STUDIO3D':{custards:200}
+    'FREEMONEY':{custards:50}, 'CREEPYPASTA':{custards:300}, 'STUDIO3D':{custards:200}
   };
 
   const loadDB = () => { try { const r = localStorage.getItem(DB_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; } };
@@ -57,7 +58,7 @@ const CORE = (function () {
 
   function register(username, email, password) {
     username = (username||'').trim(); email = (email||'').trim();
-    if (username.length < 3) return { ok:false, error:'Nick precisa ter 3+ caracteres' };
+    if (username.length < 3) return { ok:false, error:'Nick 3+ caracteres' };
     if (!/^[a-zA-Z0-9_]+$/.test(username)) return { ok:false, error:'Apenas letras, números e _' };
     if (!email.includes('@')) return { ok:false, error:'Email inválido' };
     if (!password || password.length < 4) return { ok:false, error:'Senha 4+ caracteres' };
@@ -73,17 +74,13 @@ const CORE = (function () {
     saveDB(db); setSession(key);
     return { ok:true };
   }
-
   function login(username, password) {
     const key = (username||'').trim().toLowerCase();
-    const db = initDB();
-    const u = db.users[key];
+    const db = initDB(); const u = db.users[key];
     if (!u) return { ok:false, error:'Usuário não encontrado' };
     if (u.password !== password) return { ok:false, error:'Senha incorreta' };
-    setSession(key);
-    return { ok:true };
+    setSession(key); return { ok:true };
   }
-
   const logout = () => setSession(null);
   const getCurrentUser = () => { const k = getSession(); return k ? (initDB().users[k] || null) : null; };
   function updateUser(patch) {
@@ -110,7 +107,6 @@ const CORE = (function () {
     db.transactions.push({ username:k, type:'spend', amount, reason:reason||'purchase', ts:Date.now(), balance:u.custards });
     saveDB(db); return { ok:true, balance:u.custards };
   }
-
   const getInventory = () => { const u = getCurrentUser(); return u ? (u.inventory||[]) : []; };
   const ownsItem = (id) => getInventory().includes(id);
   function addToInventory(id) {
@@ -120,17 +116,14 @@ const CORE = (function () {
     if (!u.inventory.includes(id)) { u.inventory.push(id); saveDB(db); }
     return true;
   }
-
   const getAvatar = () => { const u = getCurrentUser(); return u ? u.avatar : null; };
   const setAvatar = (a) => updateUser({ avatar: a });
   function equipItem(id) {
     const item = MARKET_ITEMS.find(i => i.id === id);
     if (!item) return { ok:false, error:'Item inválido' };
     if (!ownsItem(id)) return { ok:false, error:'Você não possui este item' };
-    const av = getAvatar(); av[item.slot] = id; setAvatar(av);
-    return { ok:true };
+    const av = getAvatar(); av[item.slot] = id; setAvatar(av); return { ok:true };
   }
-
   const getMarketItems = () => MARKET_ITEMS.map(i => ({ ...i, owned: ownsItem(i.id) }));
   const getMarketItem = (id) => MARKET_ITEMS.find(i => i.id === id);
   function buyItem(id) {
@@ -138,10 +131,8 @@ const CORE = (function () {
     if (!item) return { ok:false, error:'Item não existe' };
     if (ownsItem(id)) return { ok:false, error:'Você já possui este item' };
     if (item.price > 0) { const r = spendCustards(item.price, 'buy:'+id); if (!r.ok) return r; }
-    addToInventory(id);
-    return { ok:true, balance:getCustards() };
+    addToInventory(id); return { ok:true, balance:getCustards() };
   }
-
   function redeemCode(code) {
     const k = getSession(); if (!k) return { ok:false, error:'Precisa estar logado' };
     code = (code||'').trim().toUpperCase();
@@ -151,16 +142,14 @@ const CORE = (function () {
     const db = initDB(); const u = db.users[k];
     if (!u) return { ok:false, error:'Usuário não encontrado' };
     if (!u.redeemedCodes) u.redeemedCodes = [];
-    if (u.redeemedCodes.includes(code)) return { ok:false, error:'Você já resgatou esse código' };
+    if (u.redeemedCodes.includes(code)) return { ok:false, error:'Já resgatou' };
     u.redeemedCodes.push(code);
     u.custards += preset.custards;
     u.totalEarned = (u.totalEarned||0) + preset.custards;
     db.transactions.push({ username:k, type:'earn', amount:preset.custards, reason:'code:'+code, ts:Date.now(), balance:u.custards });
-    saveDB(db);
-    return { ok:true, custards:preset.custards, balance:u.custards };
+    saveDB(db); return { ok:true, custards:preset.custards, balance:u.custards };
   }
   const getRedeemedCodes = () => { const u = getCurrentUser(); return u ? (u.redeemedCodes||[]) : []; };
-
   function purchaseCustards(pkgId) {
     const pkg = CUSTARD_PACKAGES.find(p => p.id === pkgId);
     if (!pkg) return { ok:false, error:'Pacote inválido' };
@@ -170,7 +159,6 @@ const CORE = (function () {
   }
   const getCustardPackages = () => CUSTARD_PACKAGES.slice();
 
-  /* ---------- Jogos ---------- */
   const getGames = () => initDB().games.slice().sort((a,b) => {
     if (a.official && !b.official) return -1;
     if (!a.official && b.official) return 1;
@@ -190,8 +178,10 @@ const CORE = (function () {
       if (e) {
         e.name = data.name.trim();
         e.description = (data.description||'').trim();
+        e.category = data.category || e.category || 'Adventure';
         e.objects = data.objects || [];
         e.script = data.script || '';
+        e.models = data.models || e.models || [];
         e.updatedAt = Date.now();
         saveDB(db);
         return { ok:true, game:e, updated:true };
@@ -199,9 +189,11 @@ const CORE = (function () {
     }
     const game = {
       id:'game_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),
-      name:data.name.trim(), description:(data.description||'').trim(),
+      name:data.name.trim(),
+      description:(data.description||'').trim(),
+      category:data.category || 'Adventure',
       author:u.username, authorId:k,
-      objects:data.objects||[], script:data.script||'',
+      objects:data.objects||[], script:data.script||'', models:data.models||[],
       official:false, plays:0, likes:0, createdAt:Date.now()
     };
     db.games.push(game);
@@ -221,7 +213,6 @@ const CORE = (function () {
     saveDB(db);
     return { ok:true };
   }
-
   function incrementPlays(id) {
     const db = initDB(); const g = db.games.find(x => x.id === id);
     if (g) { g.plays = (g.plays||0) + 1; saveDB(db); }
@@ -230,58 +221,109 @@ const CORE = (function () {
     const db = initDB(); const g = db.games.find(x => x.id === id);
     if (g) { g.likes = (g.likes||0) + 1; saveDB(db); }
   }
-
   const setSelectedGame = (id) => sessionStorage.setItem('cb_selected_game', id);
   const getSelectedGame = () => { const id = sessionStorage.getItem('cb_selected_game'); return id ? getGame(id) : null; };
 
-  /* ---------- CHUNKS 16×16×16 ---------- */
+  /* ---------- CHUNKS ---------- */
   const chunkKey = (x,y,z) => `${Math.floor(x/CHUNK_SIZE)},${Math.floor(y/CHUNK_SIZE)},${Math.floor(z/CHUNK_SIZE)}`;
   function groupByChunk(objects) {
     const out = {};
     for (const o of objects) {
       const k = chunkKey(o.position.x, o.position.y, o.position.z);
-      if (!out[k]) out[k] = [];
-      out[k].push(o);
+      (out[k] = out[k] || []).push(o);
     }
     return out;
   }
 
-  /* ---------- NET (multiplayer) ---------- */
+  /* ---------- NET ---------- */
   const Net = (function () {
-    let channel = null;
-    let ws = null;
-    let handlers = [];
-    let mode = 'broadcast'; // 'broadcast' | 'websocket'
-    let roomId = null;
-
+    let channel=null, ws=null, handlers=[], mode='broadcast';
     function connect(id) {
-      roomId = id;
       if (mode === 'broadcast') {
         if (channel) channel.close();
         channel = new BroadcastChannel('cb_room_' + id);
         channel.onmessage = (e) => { for (const h of handlers) h(e.data); };
-        console.log('[Net] BroadcastChannel conectado à sala', id);
       } else if (mode === 'websocket') {
         if (ws) ws.close();
         ws = new WebSocket('wss://SEU-SERVIDOR/room/' + id);
-        ws.onmessage = (e) => { try { for (const h of handlers) h(JSON.parse(e.data)); } catch(err) {} };
-        ws.onopen = () => console.log('[Net] WebSocket conectado');
+        ws.onmessage = (e) => { try { for (const h of handlers) h(JSON.parse(e.data)); } catch(err){} };
       }
     }
-
     function send(msg) {
       if (mode === 'broadcast' && channel) channel.postMessage(msg);
       else if (mode === 'websocket' && ws && ws.readyState === 1) ws.send(JSON.stringify(msg));
     }
-
     function onMessage(fn) { handlers.push(fn); }
-    function close() {
-      if (channel) { channel.close(); channel = null; }
-      if (ws) { ws.close(); ws = null; }
-      handlers = [];
-    }
+    function close() { if (channel) { channel.close(); channel=null; } if (ws) { ws.close(); ws=null; } handlers=[]; }
     function setMode(m) { mode = m; }
     return { connect, send, onMessage, close, setMode };
+  })();
+
+  /* ============================================================
+     MODEL STORE — IndexedDB para modelos 3D enviados por upload
+     ============================================================ */
+  const ModelStore = (function () {
+    const DB_NAME = 'custardbricks_models';
+    const STORE = 'models';
+    let _db = null;
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        if (_db) return resolve(_db);
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'id' });
+        };
+        req.onsuccess = () => { _db = req.result; resolve(_db); };
+        req.onerror = () => reject(req.error);
+      });
+    }
+    async function save(id, blob, name, mimeType) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        const store = tx.objectStore(STORE);
+        const req = store.put({ id, blob, name, mimeType, size: blob.size, createdAt: Date.now() });
+        req.onsuccess = () => resolve({ id });
+        req.onerror = () => reject(req.error);
+      });
+    }
+    async function get(id) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readonly');
+        const store = tx.objectStore(STORE);
+        const req = store.get(id);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+    }
+    async function list() {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readonly');
+        const store = tx.objectStore(STORE);
+        const req = store.getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    }
+    async function remove(id) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        const store = tx.objectStore(STORE);
+        const req = store.delete(id);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+    }
+    async function getBlobURL(id) {
+      const entry = await get(id);
+      if (!entry) return null;
+      return URL.createObjectURL(entry.blob);
+    }
+    return { save, get, list, remove, getBlobURL };
   })();
 
   /* ---------- Seed ---------- */
@@ -289,8 +331,9 @@ const CORE = (function () {
     return {
       id:'official_01', name:'Slendytubby: O Início (3D)',
       description:'Explore uma instalação abandonada em 3D. Colete todos os custards. Fuja do monstro.',
+      category:'Horror',
       author:'CustardBricks', authorId:'system', official:true, plays:1234, likes:567,
-      createdAt:Date.now()-86400000*30, script:'',
+      createdAt:Date.now()-86400000*30, script:'', models:[],
       objects:[
         { id:'floor', type:'Part', position:{x:0,y:-0.25,z:0}, size:{x:40,y:0.5,z:40}, color:'#2a2a3a', canCollide:true },
         { id:'wall_n', type:'Part', position:{x:0,y:2,z:-20}, size:{x:40,y:4,z:1}, color:'#3a3a4a', canCollide:true },
@@ -312,13 +355,16 @@ const CORE = (function () {
       ]
     };
   }
-
   function seedIfNeeded() {
     const db = initDB();
     if (db.games.length === 0) { db.games.push(getOfficialGame3D()); saveDB(db); }
     else {
       let changed = false;
-      for (const g of db.games) if (!g.objects) { g.objects = []; changed = true; }
+      for (const g of db.games) {
+        if (!g.objects) { g.objects = []; changed = true; }
+        if (!g.models) { g.models = []; changed = true; }
+        if (!g.category) { g.category = g.official ? 'Horror' : 'Adventure'; changed = true; }
+      }
       const off = db.games.find(g => g.official);
       if (off && (!off.objects || off.objects.length === 0)) { Object.assign(off, getOfficialGame3D()); changed = true; }
       if (changed) saveDB(db);
@@ -336,6 +382,6 @@ const CORE = (function () {
     redeemCode, getRedeemedCodes, PRESET_CODES, purchaseCustards,
     getGames, getGame, getMyGames, publishGame, deleteGame, incrementPlays, likeGame,
     setSelectedGame, getSelectedGame,
-    CHUNK_SIZE, chunkKey, groupByChunk, Net
+    CHUNK_SIZE, chunkKey, groupByChunk, Net, ModelStore
   };
 })();
