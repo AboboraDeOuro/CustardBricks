@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8"><title>Descobrir — CustardBricks</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head><body>
+<nav id="topnav" class="topnav"></nav>
+<main class="page">
+  <h1>DESCOBRIR</h1>
+  <div class="toolbar">
+    <input class="search" id="search" placeholder="🔍 Buscar jogos...">
+    <div class="filter-tabs">
+      <button class="filter-tab active" data-f="all">Todos</button>
+      <button class="filter-tab" data-f="official">Oficiais</button>
+      <button class="filter-tab" data-f="community">Comunidade</button>
+      <button class="filter-tab" data-f="mine">Meus Jogos</button>
+    </div>
+  </div>
+  <div class="games-grid" id="grid"></div>
+</main>
+<script src="core.js"></script>
+<script src="shared.js"></script>
+<script>
+(function () {
+  let filter = 'all', query = '';
+  function card(g) {
+    const colors = ['#7b2fbe','#ff2222','#3fa14b','#e8d347','#e8b347','#4a1a72'];
+    const bg = colors[g.name.length % colors.length];
+    return `<div class="game-card" onclick="play('${g.id}')">
+      <div class="game-thumb" style="background:linear-gradient(135deg,${bg},#1a1a26);"><span>${(g.name||'?')[0].toUpperCase()}</span></div>
+      <div class="game-info">
+        <h3 class="game-name">${escapeHTML(g.name)}</h3>
+        <div class="game-author">por @${escapeHTML(g.author)}</div>
+        <div class="game-stats"><span>▶ ${g.plays||0}</span><span>♥ ${g.likes||0}</span></div>
+        <span class="game-badge ${g.official?'official':''}">${g.official?'OFICIAL':'COMUNIDADE'}</span>
+      </div>
+      <button class="play-btn">▶ JOGAR</button>
+    </div>`;
+  }
+  window.play = (id) => { CORE.incrementPlays(id); CORE.setSelectedGame(id); location.href='engine.html'; };
+  function render() {
+    let games = CORE.getGames();
+    if (filter === 'official') games = games.filter(g => g.official);
+    else if (filter === 'community') games = games.filter(g => !g.official);
+    else if (filter === 'mine') games = CORE.getMyGames();
+    if (query) { const q = query.toLowerCase(); games = games.filter(g => g.name.toLowerCase().includes(q) || g.author.toLowerCase().includes(q)); }
+    document.getElementById('grid').innerHTML = games.length ? games.map(card).join('') : '<div class="empty" style="grid-column:1/-1">Nenhum jogo encontrado.</div>';
+  }
+  document.getElementById('search').oninput = e => { query = e.target.value; render(); };
+  document.querySelectorAll('.filter-tab').forEach(t => t.onclick = () => {
+    document.querySelectorAll('.filter-tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active'); filter = t.dataset.f; render();
+  });
+  render();
+})();
+</script>
+</body></html>
