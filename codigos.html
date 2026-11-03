@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8"><title>Códigos — CustardBricks</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head><body>
+<nav id="topnav" class="topnav"></nav>
+<main class="page">
+  <h1>CÓDIGOS</h1>
+  <div class="codes-layout">
+    <div class="code-input-row">
+      <input class="code-input" id="code" placeholder="DIGITE O CÓDIGO" maxlength="20">
+      <button class="btn primary" id="btn" style="padding:0 24px;font-size:22px;">RESGATAR</button>
+    </div>
+    <div class="redeemed-list">
+      <h3>CÓDIGOS RESGATADOS</h3>
+      <div id="list"></div>
+    </div>
+  </div>
+</main>
+<script src="core.js"></script>
+<script src="shared.js"></script>
+<script>
+(function () {
+  function render() {
+    const list = CORE.getRedeemedCodes();
+    document.getElementById('list').innerHTML = list.length
+      ? list.map(c => `<div class="redeemed-item"><span>${escapeHTML(c)}</span><span style="color:var(--ok)">✓</span></div>`).join('')
+      : '<div style="color:var(--text-dim);text-align:center;padding:16px;">Nenhum código resgatado ainda.</div>';
+  }
+  function redeem() {
+    const r = CORE.redeemCode(document.getElementById('code').value);
+    if (r.ok) { toast(`+${r.custards} Custards! Saldo: ${r.balance}`, true); document.getElementById('code').value = ''; render(); renderNav(); }
+    else toast(r.error, false);
+  }
+  document.getElementById('btn').onclick = redeem;
+  document.getElementById('code').addEventListener('keydown', e => { if (e.key === 'Enter') redeem(); });
+  render();
+})();
+</script>
+</body></html>
