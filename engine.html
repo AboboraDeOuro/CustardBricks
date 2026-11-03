@@ -1,63 +1,57 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8" />
-<title>V-01 Engine — CustardBricks 3D</title>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8"><title>V-01 Engine</title>
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-<script type="importmap">
-{"imports":{"three": "https://unpkg.com/three@0.160.0/build/three.module.js"}}
-</script>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js"}}</script>
 <style>
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#000;color:#d8d0e0;font-family:'VT323',monospace;font-size:18px}
-  canvas#c3d{display:block}
-  body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.9) 100%);z-index:9000}
-  body::after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(255,255,255,.03) 0,rgba(255,255,255,.03) 1px,transparent 1px,transparent 3px);z-index:9001;mix-blend-mode:overlay;animation:fl .15s infinite}
-  @keyframes fl{0%{opacity:.9}50%{opacity:1}100%{opacity:.85}}
-
-  .static{position:fixed;inset:0;pointer-events:none;z-index:9500;opacity:0;background-image:repeating-radial-gradient(circle at 30% 40%,rgba(255,255,255,.08) 0,transparent 2px),repeating-radial-gradient(circle at 70% 60%,rgba(255,255,255,.05) 0,transparent 3px);background-size:4px 4px,6px 6px;animation:sm .12s steps(3) infinite;mix-blend-mode:screen;transition:opacity .2s}
-  @keyframes sm{0%{background-position:0 0,0 0}33%{background-position:2px 1px,-1px 2px}66%{background-position:-1px 2px,2px -1px}100%{background-position:1px -1px,-2px 1px}}
-
-  .jump{position:fixed;inset:0;background:#f00;opacity:0;pointer-events:none;z-index:9800;transition:opacity .05s}
-  .jump.flash{opacity:.85}
-
-  .hud{position:fixed;inset:0;pointer-events:none;z-index:100;padding:14px 20px}
-  .hud-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
-  .hud-box{background:rgba(10,10,16,.8);border:2px solid #2a2a3a;padding:5px 14px;font-size:20px;letter-spacing:1px;text-shadow:0 0 6px #000}
-  .hud-title{color:#7b2fbe}
-  .hud-score{color:#ff9ed0}
-  .hud-dist{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(10,10,16,.85);border:2px solid #2a2a3a;padding:4px 16px;font-size:18px;letter-spacing:2px;color:#8a839a}
-  .hud-dist.safe{color:#3fa14b}
-  .hud-dist.danger{color:#ff2222;animation:pulse .4s infinite alternate}
-  @keyframes pulse{from{opacity:.7}to{opacity:1}}
-  .hud-esc{position:fixed;bottom:20px;left:20px;color:#4a4a5a;font-size:14px;letter-spacing:2px;z-index:100;pointer-events:none}
-  .hud-brand{position:fixed;bottom:20px;right:20px;color:#4a4a5a;font-size:14px;letter-spacing:2px;z-index:100;pointer-events:none}
-
-  .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:rgba(0,0,0,.9);z-index:5000;text-align:center;padding:20px}
-  .overlay.show{display:flex;animation:fadeIn .3s}
-  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-  .overlay h1{font-size:64px;letter-spacing:4px;margin:0}
-  .overlay.lose h1{color:#ff2222;text-shadow:0 0 20px #ff2222;animation:shake .5s infinite}
-  @keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(-3px,2px)}50%{transform:translate(3px,-2px)}75%{transform:translate(-2px,-2px)}}
-  .overlay.win h1{color:#e8d347;text-shadow:0 0 20px #e8d347}
-  .overlay p{font-size:22px;color:#8a839a;max-width:560px;margin:0}
-  .overlay .reward{font-size:34px;color:#ff9ed0;text-shadow:0 0 12px #b03a78}
-  .overlay .btn{font-family:'VT323',monospace;font-size:24px;padding:10px 28px;background:#12121c;color:#d8d0e0;border:2px solid #ff2222;cursor:pointer;letter-spacing:2px;transition:.15s}
-  .overlay .btn:hover{background:#a01515;box-shadow:0 0 18px #ff2222}
-
-  .hint{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:4000;background:rgba(10,10,16,.95);border:2px solid #ff2222;padding:24px 32px;text-align:center;box-shadow:0 0 40px rgba(255,34,34,.5);transition:opacity .4s}
-  .hint.hidden{opacity:0;pointer-events:none}
-  .hint h2{color:#ff2222;margin:0 0 10px;letter-spacing:3px}
-  .hint p{margin:4px 0;color:#8a839a}
-  .hint .key{display:inline-block;padding:2px 8px;border:1px solid #2a2a3a;background:#06060a;color:#d8d0e0;margin:0 2px;font-size:18px}
-  .hint b{color:#ff2222}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#000;color:#d8d0e0;font-family:'VT323',monospace;font-size:18px}
+canvas#c3d{display:block}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.9) 100%);z-index:9000}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(255,255,255,.03) 0,rgba(255,255,255,.03) 1px,transparent 1px,transparent 3px);z-index:9001;mix-blend-mode:overlay;animation:fl .15s infinite}
+@keyframes fl{0%{opacity:.9}50%{opacity:1}100%{opacity:.85}}
+.static{position:fixed;inset:0;pointer-events:none;z-index:9500;opacity:0;background-image:repeating-radial-gradient(circle at 30% 40%,rgba(255,255,255,.08) 0,transparent 2px),repeating-radial-gradient(circle at 70% 60%,rgba(255,255,255,.05) 0,transparent 3px);background-size:4px 4px,6px 6px;animation:sm .12s steps(3) infinite;mix-blend-mode:screen;transition:opacity .2s}
+@keyframes sm{0%{background-position:0 0,0 0}33%{background-position:2px 1px,-1px 2px}66%{background-position:-1px 2px,2px -1px}100%{background-position:1px -1px,-2px 1px}}
+.jump{position:fixed;inset:0;background:#f00;opacity:0;pointer-events:none;z-index:9800;transition:opacity .05s}
+.jump.flash{opacity:.85}
+.hud{position:fixed;inset:0;pointer-events:none;z-index:100;padding:14px 20px}
+.hud-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.hud-box{background:rgba(10,10,16,.8);border:2px solid #2a2a3a;padding:5px 14px;font-size:20px;letter-spacing:1px;text-shadow:0 0 6px #000}
+.hud-title{color:#7b2fbe}
+.hud-score{color:#ff9ed0}
+.hud-dist{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(10,10,16,.85);border:2px solid #2a2a3a;padding:4px 16px;font-size:18px;letter-spacing:2px;color:#8a839a}
+.hud-dist.safe{color:#3fa14b}
+.hud-dist.danger{color:#ff2222;animation:pulse .4s infinite alternate}
+@keyframes pulse{from{opacity:.7}to{opacity:1}}
+.hud-esc{position:fixed;bottom:20px;left:20px;color:#4a4a5a;font-size:14px;letter-spacing:2px;z-index:100;pointer-events:none}
+.hud-brand{position:fixed;bottom:20px;right:20px;color:#4a4a5a;font-size:14px;letter-spacing:2px;z-index:100;pointer-events:none}
+.hud-cam{position:fixed;top:20px;right:20px;color:#4a4a5a;font-size:14px;letter-spacing:2px;z-index:100;pointer-events:none}
+.players-online{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(10,10,16,.85);border:2px solid #7b2fbe;padding:4px 16px;font-size:16px;letter-spacing:1px;color:#d8d0e0;z-index:100;pointer-events:none}
+.players-online b{color:#3fa14b}
+.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:rgba(0,0,0,.9);z-index:5000;text-align:center;padding:20px}
+.overlay.show{display:flex;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.overlay h1{font-size:64px;letter-spacing:4px;margin:0}
+.overlay.lose h1{color:#ff2222;text-shadow:0 0 20px #ff2222;animation:shake .5s infinite}
+@keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(-3px,2px)}50%{transform:translate(3px,-2px)}75%{transform:translate(-2px,-2px)}}
+.overlay.win h1{color:#e8d347;text-shadow:0 0 20px #e8d347}
+.overlay p{font-size:22px;color:#8a839a;max-width:560px;margin:0}
+.overlay .reward{font-size:34px;color:#ff9ed0;text-shadow:0 0 12px #b03a78}
+.overlay .btn{font-family:'VT323',monospace;font-size:24px;padding:10px 28px;background:#12121c;color:#d8d0e0;border:2px solid #ff2222;cursor:pointer;letter-spacing:2px;transition:.15s}
+.overlay .btn:hover{background:#a01515;box-shadow:0 0 18px #ff2222}
+.hint{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:4000;background:rgba(10,10,16,.95);border:2px solid #ff2222;padding:24px 32px;text-align:center;box-shadow:0 0 40px rgba(255,34,34,.5);transition:opacity .4s}
+.hint.hidden{opacity:0;pointer-events:none}
+.hint h2{color:#ff2222;margin:0 0 10px;letter-spacing:3px}
+.hint p{margin:4px 0;color:#8a839a}
+.hint .key{display:inline-block;padding:2px 8px;border:1px solid #2a2a3a;background:#06060a;color:#d8d0e0;margin:0 2px;font-size:18px}
+.hint b{color:#ff2222}
 </style>
-</head>
-<body>
+</head><body>
 
 <canvas id="c3d"></canvas>
 <div class="static" id="static"></div>
 <div class="jump" id="jump"></div>
+<div class="players-online" id="playersOnline">👥 Jogadores: <b>1</b></div>
 
 <div class="hud" id="hud" style="display:none">
   <div class="hud-top">
@@ -66,14 +60,14 @@
   </div>
 </div>
 <div class="hud-dist" id="hDist" style="display:none">—</div>
-<div class="hud-esc" id="hEsc" style="display:none">ESC sair</div>
+<div class="hud-esc" id="hEsc" style="display:none">ESC sair · V câmera</div>
+<div class="hud-cam" id="hCam">3ª pessoa</div>
 <div class="hud-brand">POWERED BY V-01</div>
 
 <div class="hint" id="hint">
   <h2>V-01 ENGINE 3D</h2>
-  <p>Mova com <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span></p>
+  <p>Mova com <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> · <span class="key">V</span> alterna câmera 1ª/3ª</p>
   <p>Colete <b style="color:#ff9ed0">custards</b> · Fuja do <b>monstro</b></p>
-  <p>Se houver <b style="color:#e8d347">★ Meta</b>, encontre-a</p>
   <p style="margin-top:14px;color:#d8d0e0" id="hintExtra">Pressione qualquer tecla para começar</p>
 </div>
 
@@ -85,34 +79,22 @@
 </div>
 
 <script src="core.js"></script>
+<script src="shared.js"></script>
 <script type="module">
 import * as THREE from 'three';
 
-/* =========================================================
-   Bootstrap
-========================================================= */
-const Core = window.CORE;
 const params = new URLSearchParams(location.search);
 const isTest = params.get('test') === '1';
-
 let game;
-if (isTest) {
-  try { game = JSON.parse(sessionStorage.getItem('cb_test_game') || 'null'); }
-  catch (e) { game = null; }
-  if (!game) { alert('Nenhum jogo de teste'); location.href = 'index.html'; }
-} else {
-  if (!Core.getCurrentUser()) { location.href = 'index.html'; }
-  game = Core.getSelectedGame();
-  if (!game) { alert('Nenhum jogo selecionado'); location.href = 'index.html'; }
-  Core.incrementPlays(game.id);
-}
+if (isTest) { try { game = JSON.parse(sessionStorage.getItem('cb_test_game') || 'null'); } catch(e) { game = null; } if (!game) { alert('Nenhum jogo de teste'); location.href = 'index.html'; } }
+else { if (!CORE.getCurrentUser()) location.href = 'index.html'; game = CORE.getSelectedGame(); if (!game) { alert('Nenhum jogo selecionado'); location.href = 'index.html'; } CORE.incrementPlays(game.id); }
 
-const avatar = Core.getCurrentUser() ? Core.getAvatar() : { body: 'body_purple' };
-const bodyColor = (Core.getMarketItem && Core.getMarketItem(avatar.body)?.color) || '#7b2fbe';
+const me = CORE.getCurrentUser();
+const myName = me ? me.username : 'player_' + Math.random().toString(36).slice(2, 6);
+const avatar = me ? CORE.getAvatar() : { body: 'body_purple' };
+const bodyColor = (CORE.getMarketItem && CORE.getMarketItem(avatar.body)?.color) || '#7b2fbe';
 
-/* =========================================================
-   Three.js base
-========================================================= */
+/* ========== THREE BASE ========== */
 const canvas = document.getElementById('c3d');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -123,7 +105,7 @@ renderer.toneMappingExposure = 0.95;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x050508);
-scene.fog = new THREE.Fog(0x050508, 30, 100);
+scene.fog = new THREE.Fog(0x050508, 35, 110);
 
 const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 500);
 
@@ -138,221 +120,185 @@ sun.shadow.camera.far = 150;
 scene.add(sun);
 scene.add(new THREE.HemisphereLight(0x7b2fbe, 0x0a0a10, 0.35));
 
-function resize() {
-  renderer.setSize(innerWidth, innerHeight);
-  camera.aspect = innerWidth / innerHeight;
-  camera.updateProjectionMatrix();
-}
-resize();
-window.addEventListener('resize', resize);
+function resize() { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); }
+resize(); window.addEventListener('resize', resize);
 
-/* =========================================================
-   Mesh builders
-========================================================= */
+/* ========== CHUNK-BASED SCENE ========== */
+const CHUNK_SIZE = CORE.CHUNK_SIZE;
+const chunkGroups = new Map(); // key → THREE.Group
+function getChunkGroup(key) {
+  if (!chunkGroups.has(key)) {
+    const g = new THREE.Group();
+    g.userData.isChunk = true;
+    g.userData.chunkKey = key;
+    scene.add(g);
+    chunkGroups.set(key, g);
+  }
+  return chunkGroups.get(key);
+}
+
 function buildMonsterMesh(data) {
   const g = new THREE.Group();
   const s = data.size;
-  const bodyMat = new THREE.MeshStandardMaterial({ color: data.color || '#444', roughness: 0.85 });
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(s.x * 0.4, s.x * 0.5, s.y * 0.6, 16), bodyMat);
-  body.position.y = s.y * 0.3; body.castShadow = true;
-  g.add(body);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(s.x * 0.45, 20, 20), bodyMat);
-  head.position.y = s.y * 0.75; head.castShadow = true;
-  g.add(head);
+  const mat = new THREE.MeshStandardMaterial({ color: data.color||'#444', roughness: 0.85 });
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(s.x*.4, s.x*.5, s.y*.6, 16), mat);
+  body.position.y = s.y*.3; body.castShadow = true; g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(s.x*.45, 20, 20), mat);
+  head.position.y = s.y*.75; head.castShadow = true; g.add(head);
   const eyeMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 3 });
-  const eL = new THREE.Mesh(new THREE.SphereGeometry(s.x * 0.08, 10, 10), eyeMat);
-  eL.position.set(-s.x * 0.15, s.y * 0.78, s.x * 0.35);
-  g.add(eL);
-  const eR = eL.clone(); eR.position.x = s.x * 0.15; g.add(eR);
+  const eL = new THREE.Mesh(new THREE.SphereGeometry(s.x*.08, 10, 10), eyeMat);
+  eL.position.set(-s.x*.15, s.y*.78, s.x*.35); g.add(eL);
+  const eR = eL.clone(); eR.position.x = s.x*.15; g.add(eR);
   return g;
 }
 
 function buildMesh(data) {
-  if (data.type === 'Monster') {
-    const g = buildMonsterMesh(data);
-    g.position.set(data.position.x, data.position.y, data.position.z);
-    g.userData.ref = data;
-    return g;
-  }
+  if (data.type === 'Monster') { const g = buildMonsterMesh(data); g.position.set(data.position.x, data.position.y, data.position.z); return g; }
   let geom, mat;
   switch (data.type) {
-    case 'Sphere':
-      geom = new THREE.SphereGeometry(data.size.x / 2, 20, 20);
-      mat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.5 });
-      break;
-    case 'Coin':
-      geom = new THREE.SphereGeometry(data.size.x / 2, 20, 20);
-      mat = new THREE.MeshStandardMaterial({
-        color: data.color, roughness: 0.4,
-        emissive: new THREE.Color(data.color), emissiveIntensity: 0.7
-      });
-      break;
-    case 'SpawnPoint':
-      geom = new THREE.CylinderGeometry(data.size.x / 2, data.size.x / 2, data.size.y, 24);
-      mat = new THREE.MeshStandardMaterial({ color: data.color, transparent: true, opacity: 0.4 });
-      break;
-    case 'Goal':
-      geom = new THREE.TorusGeometry(data.size.x / 2, data.size.x * 0.18, 12, 32);
-      mat = new THREE.MeshStandardMaterial({
-        color: data.color, emissive: new THREE.Color(data.color),
-        emissiveIntensity: 1, metalness: 0.7, roughness: 0.3
-      });
-      break;
-    case 'KillBrick':
-      geom = new THREE.BoxGeometry(data.size.x, data.size.y, data.size.z);
-      mat = new THREE.MeshStandardMaterial({
-        color: '#ff2222', emissive: new THREE.Color(0xff0000), emissiveIntensity: 0.5
-      });
-      break;
-    default:
-      geom = new THREE.BoxGeometry(data.size.x, data.size.y, data.size.z);
-      mat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.7 });
+    case 'Sphere': geom = new THREE.SphereGeometry(data.size.x/2, 20, 20); mat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.5 }); break;
+    case 'Coin': geom = new THREE.SphereGeometry(data.size.x/2, 20, 20); mat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.4, emissive: new THREE.Color(data.color), emissiveIntensity: 0.7 }); break;
+    case 'SpawnPoint': geom = new THREE.CylinderGeometry(data.size.x/2, data.size.x/2, data.size.y, 24); mat = new THREE.MeshStandardMaterial({ color: data.color, transparent: true, opacity: 0.4 }); break;
+    case 'Goal': geom = new THREE.TorusGeometry(data.size.x/2, data.size.x*.18, 12, 32); mat = new THREE.MeshStandardMaterial({ color: data.color, emissive: new THREE.Color(data.color), emissiveIntensity: 1, metalness: 0.7 }); break;
+    case 'KillBrick': geom = new THREE.BoxGeometry(data.size.x, data.size.y, data.size.z); mat = new THREE.MeshStandardMaterial({ color: '#ff2222', emissive: new THREE.Color(0xff0000), emissiveIntensity: 0.5 }); break;
+    default: geom = new THREE.BoxGeometry(data.size.x, data.size.y, data.size.z); mat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.7 });
   }
   const mesh = new THREE.Mesh(geom, mat);
   mesh.position.set(data.position.x, data.position.y, data.position.z);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  mesh.userData.ref = data;
+  mesh.castShadow = true; mesh.receiveShadow = true;
+  mesh.userData.isStatic = true;
+  mesh.matrixAutoUpdate = false; mesh.updateMatrix();
   return mesh;
 }
 
-/* =========================================================
-   Build world
-========================================================= */
-const workspace = [];
-const meshMap = new Map();
-const coins = [];
-const monsters = [];
-const goals = [];
-const killers = [];
-const solids = [];
+/* ========== BUILD WORLD (chunked) ========== */
+const solids = [], coins = [], monsters = [], goals = [], killers = [];
 
 function addObject(data) {
-  workspace.push(data);
+  const chunkKey = CORE.chunkKey(data.position.x, data.position.y, data.position.z);
   const mesh = buildMesh(data);
-  scene.add(mesh);
-  meshMap.set(data.id, mesh);
-  if (data.type === 'Coin') coins.push({ data, mesh, collected: false, baseY: data.position.y });
-  else if (data.type === 'Monster') monsters.push({ data, mesh, speed: data.speed || 2 });
-  else if (data.type === 'Goal') goals.push({ data, mesh });
-  else if (data.type === 'KillBrick') killers.push({ data, mesh });
-  else if (data.type === 'Part' || data.type === 'Sphere') {
-    if (data.canCollide) solids.push(data);
-  }
-  return mesh;
+  getChunkGroup(chunkKey).add(mesh);
+  mesh.userData.objectId = data.id;
+  if (data.type === 'Coin') coins.push({ data, mesh, collected: false, baseY: data.position.y, chunkKey });
+  else if (data.type === 'Monster') monsters.push({ data, mesh, speed: data.speed||2, chunkKey });
+  else if (data.type === 'Goal') goals.push({ data, mesh, chunkKey });
+  else if (data.type === 'KillBrick') killers.push({ data, mesh, chunkKey });
+  else if ((data.type === 'Part' || data.type === 'Sphere') && data.canCollide) solids.push({ data, mesh, chunkKey });
 }
 
-(game.objects || []).forEach(o => addObject(o));
+(game.objects || []).forEach(addObject);
+console.log('[V-01]', game.objects.length, 'objetos em', chunkGroups.size, 'chunks (16³)');
 
-/* =========================================================
-   Player
-========================================================= */
-const playerSpawnData = workspace.find(o => o.type === 'SpawnPoint');
-const spawnPos = playerSpawnData ? playerSpawnData.position : { x: 0, y: 0, z: 0 };
+/* ========== PLAYER ========== */
+const spawnData = (game.objects || []).find(o => o.type === 'SpawnPoint');
+const spawnPos = spawnData ? spawnData.position : { x: 0, y: 0, z: 0 };
 
 const playerMesh = new THREE.Mesh(
   new THREE.CapsuleGeometry(0.5, 1.2, 6, 12),
-  new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.5, emissive: new THREE.Color(bodyColor), emissiveIntensity: 0.15 })
+  new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.5, emissive: new THREE.Color(bodyColor), emissiveIntensity: 0.2 })
 );
 playerMesh.castShadow = true;
 scene.add(playerMesh);
 
-const player = {
-  pos: new THREE.Vector3(spawnPos.x, 0, spawnPos.z),
-  radius: 0.5,
-  height: 2,
-  speed: 7
-};
+const player = { pos: new THREE.Vector3(spawnPos.x, 0, spawnPos.z), radius: 0.5, height: 2, speed: 7 };
 playerMesh.position.copy(player.pos);
 
-/* =========================================================
-   State
-========================================================= */
+/* ========== NET (multiplayer) ========== */
+const otherPlayers = new Map(); // username → { mesh, lastSeen }
+let playersOnline = 1;
+
+const net = CORE.Net;
+if (!isTest) {
+  net.connect(game.id);
+  net.onMessage((msg) => {
+    if (!msg || msg.from === myName) return;
+    if (msg.type === 'hello') {
+      // responde com posição
+      net.send({ type: 'state', from: myName, x: player.pos.x, y: player.pos.y, z: player.pos.z, color: bodyColor });
+    } else if (msg.type === 'state') {
+      let op = otherPlayers.get(msg.from);
+      if (!op) {
+        const m = new THREE.Mesh(
+          new THREE.CapsuleGeometry(0.5, 1.2, 6, 12),
+          new THREE.MeshStandardMaterial({ color: msg.color || '#7b2fbe', emissive: new THREE.Color(msg.color || '#7b2fbe'), emissiveIntensity: 0.3 })
+        );
+        m.castShadow = true;
+        scene.add(m);
+        op = { mesh: m, lastSeen: Date.now() };
+        otherPlayers.set(msg.from, op);
+        playersOnline = otherPlayers.size + 1;
+        document.getElementById('playersOnline').innerHTML = `👥 Jogadores: <b>${playersOnline}</b>`;
+      }
+      op.mesh.position.set(msg.x, 1, msg.z);
+      op.lastSeen = Date.now();
+    } else if (msg.type === 'leave') {
+      const op = otherPlayers.get(msg.from);
+      if (op) { scene.remove(op.mesh); otherPlayers.delete(msg.from); playersOnline = otherPlayers.size + 1; document.getElementById('playersOnline').innerHTML = `👥 Jogadores: <b>${playersOnline}</b>`; }
+    }
+  });
+  net.send({ type: 'hello', from: myName });
+  // anuncia presença a cada 100ms
+  setInterval(() => net.send({ type: 'state', from: myName, x: player.pos.x, y: player.pos.y, z: player.pos.z, color: bodyColor }), 100);
+  // limpa outros que sumiram
+  setInterval(() => {
+    const now = Date.now();
+    for (const [name, op] of otherPlayers) {
+      if (now - op.lastSeen > 3000) { scene.remove(op.mesh); otherPlayers.delete(name); playersOnline = otherPlayers.size + 1; document.getElementById('playersOnline').innerHTML = `👥 Jogadores: <b>${playersOnline}</b>`; }
+    }
+  }, 1000);
+  window.addEventListener('beforeunload', () => net.send({ type: 'leave', from: myName }));
+}
+
+/* ========== STATE ========== */
 let state = 'waiting';
 const keys = {};
-let lastTime = 0;
-let score = 0;
+let lastTime = 0, score = 0, nearestMonster = Infinity, camMode = 'third';
 const totalCoins = coins.length;
 const hasGoal = goals.length > 0;
-let nearestMonster = Infinity;
 
-/* =========================================================
-   HUD
-========================================================= */
 const hud = document.getElementById('hud');
-const hGame = document.getElementById('hGame');
-const hScore = document.getElementById('hScore');
-const hTotal = document.getElementById('hTotal');
-const hDist = document.getElementById('hDist');
-const hEsc = document.getElementById('hEsc');
-const hintEl = document.getElementById('hint');
-const hintExtra = document.getElementById('hintExtra');
-const staticEl = document.getElementById('static');
-const jumpEl = document.getElementById('jump');
-const overlay = document.getElementById('overlay');
-const ovTitle = document.getElementById('ovTitle');
-const ovMsg = document.getElementById('ovMsg');
-const ovReward = document.getElementById('ovReward');
-const ovBtn = document.getElementById('ovBtn');
+document.getElementById('hGame').textContent = (game.name || 'V-01').slice(0, 28);
+document.getElementById('hTotal').textContent = totalCoins;
+document.getElementById('hintExtra').textContent = hasGoal ? 'Encontre a ★ Meta. Pressione uma tecla.' : (totalCoins > 0 ? 'Colete todos os custards. Pressione uma tecla.' : 'Explore livremente.');
 
-hGame.textContent = (game.name || 'V-01').slice(0, 30);
-hTotal.textContent = totalCoins;
+document.getElementById('ovBtn').onclick = () => { if (isTest) location.href = 'studio.html'; else location.href = 'index.html'; };
 
-if (totalCoins === 0 && !hasGoal) hintExtra.textContent = 'Sem objetivo — explore livremente. Pressione uma tecla.';
-else if (hasGoal) hintExtra.textContent = 'Encontre a ★ Meta. Pressione uma tecla.';
-else hintExtra.textContent = 'Colete todos os custards. Pressione uma tecla.';
-
-ovBtn.addEventListener('click', () => {
-  if (isTest) location.href = 'studio.html';
-  else location.href = 'index.html';
-});
-
-/* =========================================================
-   Input
-========================================================= */
+/* ========== INPUT ========== */
 window.addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
   keys[k] = true;
   if (state === 'waiting') startGame();
-  if (k === 'escape' && state !== 'waiting') {
-    if (isTest) location.href = 'studio.html';
-    else location.href = 'index.html';
-  }
+  if (k === 'escape' && state !== 'waiting') { if (isTest) location.href='studio.html'; else location.href='index.html'; }
+  if (k === 'v') { camMode = camMode === 'third' ? 'first' : 'third'; document.getElementById('hCam').textContent = camMode === 'third' ? '3ª pessoa' : '1ª pessoa'; }
 });
 window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 
 function startGame() {
   state = 'playing';
-  hintEl.classList.add('hidden');
+  document.getElementById('hint').classList.add('hidden');
   hud.style.display = 'block';
-  hDist.style.display = 'block';
-  hEsc.style.display = 'block';
+  document.getElementById('hDist').style.display = 'block';
+  document.getElementById('hEsc').style.display = 'block';
   lastTime = performance.now();
   requestAnimationFrame(loop);
 }
 
-/* =========================================================
-   Collision (AABB XZ with Y band)
-========================================================= */
-function wouldCollide(x, z) {
+/* ========== COLLISION ========== */
+function collides(x, z) {
   const pMinY = 0.1, pMaxY = 1.9;
-  const half = player.radius;
-  for (const obj of solids) {
-    const s = obj.size;
-    const p = obj.position;
-    const minY = p.y - s.y / 2, maxY = p.y + s.y / 2;
+  for (const { data } of solids) {
+    const s = data.size, p = data.position;
+    const minY = p.y - s.y/2, maxY = p.y + s.y/2;
     if (maxY <= pMinY || minY >= pMaxY) continue;
-    const minX = p.x - s.x / 2, maxX = p.x + s.x / 2;
-    const minZ = p.z - s.z / 2, maxZ = p.z + s.z / 2;
-    if (x + half > minX && x - half < maxX && z + half > minZ && z - half < maxZ) return true;
+    const minX = p.x - s.x/2, maxX = p.x + s.x/2;
+    const minZ = p.z - s.z/2, maxZ = p.z + s.z/2;
+    if (x + player.radius > minX && x - player.radius < maxX && z + player.radius > minZ && z - player.radius < maxZ) return true;
   }
   return false;
 }
 
-/* =========================================================
-   Update
-========================================================= */
+/* ========== UPDATE ========== */
 function updatePlayer(dt) {
   let dx = 0, dz = 0;
   if (keys['w'] || keys['arrowup'])    dz -= 1;
@@ -360,44 +306,39 @@ function updatePlayer(dt) {
   if (keys['a'] || keys['arrowleft'])  dx -= 1;
   if (keys['d'] || keys['arrowright']) dx += 1;
   if (dx || dz) {
-    const len = Math.hypot(dx, dz);
-    dx /= len; dz /= len;
+    const len = Math.hypot(dx, dz); dx /= len; dz /= len;
     const step = player.speed * dt;
     const nx = player.pos.x + dx * step;
-    if (!wouldCollide(nx, player.pos.z)) player.pos.x = nx;
+    if (!collides(nx, player.pos.z)) player.pos.x = nx;
     const nz = player.pos.z + dz * step;
-    if (!wouldCollide(player.pos.x, nz)) player.pos.z = nz;
+    if (!collides(player.pos.x, nz)) player.pos.z = nz;
     playerMesh.rotation.y = Math.atan2(dx, dz);
   }
-  playerMesh.position.set(player.pos.x, player.height / 2, player.pos.z);
+  playerMesh.position.set(player.pos.x, player.height/2, player.pos.z);
 }
 
 function updateMonsters(dt) {
   nearestMonster = Infinity;
   for (const m of monsters) {
-    const dir = new THREE.Vector3().subVectors(player.pos, m.mesh.position);
-    dir.y = 0;
+    const dir = new THREE.Vector3().subVectors(player.pos, m.mesh.position); dir.y = 0;
     const dist = dir.length();
     if (dist < nearestMonster) nearestMonster = dist;
     if (dist > 0.1) {
       dir.normalize();
       const step = m.speed * dt;
-      // Try to move toward player, sliding against walls
       const nx = m.mesh.position.x + dir.x * step;
       const nz = m.mesh.position.z + dir.z * step;
       let moved = false;
-      if (!wouldCollide(nx, m.mesh.position.z)) { m.mesh.position.x = nx; moved = true; }
-      if (!wouldCollide(m.mesh.position.x, nz)) { m.mesh.position.z = nz; moved = true; }
+      if (!collides(nx, m.mesh.position.z)) { m.mesh.position.x = nx; moved = true; }
+      if (!collides(m.mesh.position.x, nz)) { m.mesh.position.z = nz; moved = true; }
       if (!moved) {
-        // Slide perpendicular
         const px = m.mesh.position.x - dir.z * step;
         const pz = m.mesh.position.z + dir.x * step;
-        if (!wouldCollide(px, m.mesh.position.z)) m.mesh.position.x = px;
-        if (!wouldCollide(m.mesh.position.x, pz)) m.mesh.position.z = pz;
+        if (!collides(px, m.mesh.position.z)) m.mesh.position.x = px;
+        if (!collides(m.mesh.position.x, pz)) m.mesh.position.z = pz;
       }
       m.mesh.rotation.y = Math.atan2(dir.x, dir.z);
     }
-    // Kill on contact
     if (dist < 1.3) { triggerLose(); return; }
   }
 }
@@ -406,17 +347,12 @@ function updateCoins(dt) {
   const t = performance.now() * 0.001;
   for (const c of coins) {
     if (c.collected) continue;
-    c.mesh.position.y = c.baseY + Math.sin(t * 2.5 + c.mesh.position.x) * 0.15;
-    c.mesh.rotation.y += dt * 2;
-    const dx = c.mesh.position.x - player.pos.x;
-    const dz = c.mesh.position.z - player.pos.z;
-    const dy = c.mesh.position.y - (player.pos.y + 1);
-    if (Math.hypot(dx, dz) < 1.2 && Math.abs(dy) < 1.5) {
-      c.collected = true;
-      c.mesh.visible = false;
-      scene.remove(c.mesh);
+    c.mesh.position.y = c.baseY + Math.sin(t*2.5 + c.mesh.position.x) * 0.15;
+    c.mesh.rotation.y += dt*2;
+    if (Math.hypot(c.mesh.position.x - player.pos.x, c.mesh.position.z - player.pos.z) < 1.2) {
+      c.collected = true; c.mesh.visible = false;
       score++;
-      hScore.textContent = score;
+      document.getElementById('hScore').textContent = score;
       if (!hasGoal && totalCoins > 0 && score >= totalCoins) triggerWin();
     }
   }
@@ -424,122 +360,93 @@ function updateCoins(dt) {
 
 function updateKillers() {
   for (const k of killers) {
-    const dx = k.mesh.position.x - player.pos.x;
-    const dz = k.mesh.position.z - player.pos.z;
-    const halfX = k.data.size.x / 2 + player.radius;
-    const halfZ = k.data.size.z / 2 + player.radius;
-    if (Math.abs(dx) < halfX && Math.abs(dz) < halfZ) {
-      const pMinY = 0.1, pMaxY = 1.9;
-      const minY = k.data.position.y - k.data.size.y / 2;
-      const maxY = k.data.position.y + k.data.size.y / 2;
-      if (maxY > pMinY && minY < pMaxY) { triggerLose(); return; }
+    const dx = Math.abs(k.mesh.position.x - player.pos.x);
+    const dz = Math.abs(k.mesh.position.z - player.pos.z);
+    if (dx < k.data.size.x/2 + player.radius && dz < k.data.size.z/2 + player.radius) {
+      const minY = k.data.position.y - k.data.size.y/2;
+      const maxY = k.data.position.y + k.data.size.y/2;
+      if (maxY > 0.1 && minY < 1.9) { triggerLose(); return; }
     }
   }
   for (const g of goals) {
-    const dx = g.mesh.position.x - player.pos.x;
-    const dz = g.mesh.position.z - player.pos.z;
-    if (Math.hypot(dx, dz) < 2) { triggerWin(); return; }
+    if (Math.hypot(g.mesh.position.x - player.pos.x, g.mesh.position.z - player.pos.z) < 2) { triggerWin(); return; }
   }
 }
 
 function updateAtmosphere() {
-  if (monsters.length === 0 || nearestMonster === Infinity) {
-    staticEl.style.opacity = '0';
-    hDist.textContent = '—';
-    hDist.className = 'hud-dist';
-    return;
+  const staticEl = document.getElementById('static');
+  const hDist = document.getElementById('hDist');
+  if (!monsters.length || nearestMonster === Infinity) {
+    staticEl.style.opacity = '0'; hDist.textContent = '—'; hDist.className = 'hud-dist'; return;
   }
   const d = nearestMonster;
-  if (d < 15) staticEl.style.opacity = Math.min(0.8, (15 - d) / 15).toFixed(2);
-  else staticEl.style.opacity = '0';
+  staticEl.style.opacity = d < 15 ? Math.min(0.8, (15 - d) / 15).toFixed(2) : '0';
   hDist.textContent = 'DISTÂNCIA: ' + d.toFixed(1) + 'm';
-  hDist.className = 'hud-dist';
-  if (d < 6) hDist.classList.add('danger');
-  else if (d > 15) hDist.classList.add('safe');
+  hDist.className = 'hud-dist' + (d < 6 ? ' danger' : d > 15 ? ' safe' : '');
 }
 
-/* =========================================================
-   Camera
-========================================================= */
-const camOffset = new THREE.Vector3(0, 10, 12);
+/* ========== CAMERA 1ª/3ª ========== */
+let camLerp = new THREE.Vector3();
 function updateCamera(dt) {
-  const target = new THREE.Vector3(player.pos.x, 2, player.pos.z).add(camOffset);
-  const k = Math.min(1, dt * 6);
-  camera.position.lerp(target, k);
-  camera.lookAt(player.pos.x, 1.2, player.pos.z);
+  if (camMode === 'third') {
+    const target = new THREE.Vector3(player.pos.x, 2, player.pos.z).add(new THREE.Vector3(0, 10, 12));
+    camera.position.lerp(target, Math.min(1, dt * 6));
+    camera.lookAt(player.pos.x, 1.2, player.pos.z);
+  } else {
+    // 1ª pessoa — direção baseada em W (ou para frente se nada)
+    const yaw = playerMesh.rotation.y;
+    const forward = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
+    const target = player.pos.clone().add(new THREE.Vector3(0, 1.5, 0));
+    camera.position.copy(target).add(forward.clone().multiplyScalar(-0.5));
+    camera.lookAt(target.clone().add(forward.clone().multiplyScalar(5)));
+  }
 }
 camera.position.set(spawnPos.x, 10, spawnPos.z + 12);
 camera.lookAt(spawnPos.x, 1, spawnPos.z);
 
-/* =========================================================
-   Script execution (optional)
-========================================================= */
-function executeScript() {
-  if (!game.script || !game.script.trim()) return;
-
-  const V3 = { new: (x = 0, y = 0, z = 0) => ({ x, y, z }) };
-  const C3 = {
-    fromRGB: (r = 0, g = 0, b = 0) => '#' + [r,g,b].map(c => Math.max(0,Math.min(255,Math.round(c))).toString(16).padStart(2,'0')).join(''),
-    new: (r = 0, g = 0, b = 0) => C3.fromRGB(r*255, g*255, b*255)
-  };
-
-  const InstanceAPI = {
-    new: (type) => {
-      const data = {
-        id: 'dyn_' + Math.random().toString(36).slice(2, 10),
-        type, position: { x: 0, y: 0, z: 0 }, size: { x: 1, y: 1, z: 1 },
-        color: type === 'Coin' ? '#ff9ed0' : type === 'Monster' ? '#444' : type === 'Goal' ? '#e8d347' : type === 'KillBrick' ? '#ff2222' : type === 'SpawnPoint' ? '#3fa14b' : '#888',
-        canCollide: type === 'Part' || type === 'Sphere' || type === 'KillBrick',
-        speed: 2.5
-      };
-      const inst = {
-        ClassName: type,
-        _data: data,
-        get Position() { return data.position; },
-        set Position(v) { data.position = v; const m = meshMap.get(data.id); if (m) m.position.set(v.x, v.y, v.z); },
-        get Size() { return data.size; },
-        set Size(v) { data.size = v; const m = meshMap.get(data.id); if (m) { scene.remove(m); } meshMap.delete(data.id); const nm = buildMesh(data); nm.userData.ref = data; scene.add(nm); meshMap.set(data.id, nm); },
-        set Color(v) { data.color = v; const m = meshMap.get(data.id); if (m) m.traverse ? m.traverse(c => { if (c.isMesh && c.material.color) c.material.color.set(v); }) : m.material.color.set(v); },
-        set Speed(v) { data.speed = v; },
-        set Parent(p) {
-          if (p === workspace) {
-            addObject(data);
-          }
-        }
-      };
-      return inst;
-    }
-  };
-
-  const playerAPI = {
-    Kill: () => triggerLose(),
-    ClassName: 'Player'
-  };
-
-  const gameAPI = {
-    Workspace: workspace,
-    Players: { LocalPlayer: playerAPI }
-  };
-
-  try {
-    const fn = new Function('Vector3', 'Color3', 'Instance', 'game', 'print', 'workspace', game.script);
-    fn(V3, C3, InstanceAPI, gameAPI, (...a) => console.log('[V-01]', ...a), workspace);
-  } catch (e) {
-    console.error('Script error:', e);
-  }
+/* ========== CICLO DIA/NOITE ========== */
+let dayTime = 0;
+function updateDayNight(dt) {
+  dayTime += dt * 0.05;
+  const angle = dayTime % (Math.PI * 2);
+  sun.position.set(Math.cos(angle) * 40, Math.max(10, Math.sin(angle) * 40), 20);
+  sun.intensity = 0.6 + Math.max(0, Math.sin(angle)) * 0.6;
 }
 
+/* ========== SCRIPT ========== */
+function executeScript() {
+  if (!game.script || !game.script.trim()) return;
+  const V3 = { new: (x=0,y=0,z=0) => ({x,y,z}) };
+  const C3 = { fromRGB: (r=0,g=0,b=0) => '#'+[r,g,b].map(c=>Math.max(0,Math.min(255,Math.round(c))).toString(16).padStart(2,'0')).join('') };
+  const InstanceAPI = {
+    new: (type) => {
+      const data = { id:'dyn_'+Math.random().toString(36).slice(2,8), type, position:{x:0,y:0,z:0}, size:{x:1,y:1,z:1},
+        color: type==='Coin'?'#ff9ed0':type==='Monster'?'#444':type==='Goal'?'#e8d347':type==='KillBrick'?'#ff2222':type==='SpawnPoint'?'#3fa14b':'#888',
+        canCollide: ['Part','Sphere','KillBrick'].includes(type), speed:2.5 };
+      return {
+        ClassName: type, _data: data,
+        get Position() { return data.position; }, set Position(v) { data.position = v; },
+        get Size() { return data.size; }, set Size(v) { data.size = v; },
+        set Color(v) { data.color = v; }, set Speed(v) { data.speed = v; },
+        set Parent(p) { if (p === workspace) addObject(data); }
+      };
+    }
+  };
+  const playerAPI = { Kill: () => triggerLose(), ClassName: 'Player' };
+  const workspaceAPI = { get length() { return (game.objects||[]).length; } };
+  try {
+    const fn = new Function('Vector3','Color3','Instance','game','print','workspace', game.script);
+    fn(V3, C3, InstanceAPI, { Workspace: workspaceAPI, Players: { LocalPlayer: playerAPI } }, (...a) => console.log('[V-01]', ...a), workspaceAPI);
+  } catch(e) { console.error('Script error:', e); }
+}
 executeScript();
 
-/* =========================================================
-   Main loop
-========================================================= */
-function loop(timestamp) {
+/* ========== LOOP ========== */
+function loop(ts) {
   if (state !== 'playing') return;
-  if (!lastTime) lastTime = timestamp;
-  const dt = Math.min(0.05, (timestamp - lastTime) / 1000);
-  lastTime = timestamp;
-
+  if (!lastTime) lastTime = ts;
+  const dt = Math.min(0.05, (ts - lastTime) / 1000);
+  lastTime = ts;
   updatePlayer(dt);
   updateMonsters(dt);
   if (state !== 'playing') return;
@@ -549,46 +456,38 @@ function loop(timestamp) {
   if (state !== 'playing') return;
   updateAtmosphere();
   updateCamera(dt);
-
+  updateDayNight(dt);
   renderer.render(scene, camera);
-
   if (state === 'playing') requestAnimationFrame(loop);
 }
 
-/* =========================================================
-   End states
-========================================================= */
+/* ========== END STATES ========== */
 function triggerLose() {
   if (state !== 'playing') return;
   state = 'lost';
-  jumpEl.classList.add('flash');
-  setTimeout(() => jumpEl.classList.remove('flash'), 100);
-  setTimeout(() => jumpEl.classList.add('flash'), 180);
-  setTimeout(() => jumpEl.classList.remove('flash'), 260);
+  const jump = document.getElementById('jump');
+  jump.classList.add('flash'); setTimeout(() => jump.classList.remove('flash'), 100);
+  setTimeout(() => jump.classList.add('flash'), 180);
+  setTimeout(() => jump.classList.remove('flash'), 260);
   setTimeout(() => {
-    overlay.className = 'overlay lose show';
-    ovTitle.textContent = 'VOCÊ MORREU';
-    ovMsg.textContent = 'O Slendytubby te encontrou...';
-    ovReward.textContent = '';
+    const ov = document.getElementById('overlay');
+    ov.className = 'overlay lose show';
+    document.getElementById('ovTitle').textContent = 'VOCÊ MORREU';
+    document.getElementById('ovMsg').textContent = 'O Slendytubby te encontrou...';
+    document.getElementById('ovReward').textContent = '';
   }, 500);
 }
-
 function triggerWin() {
   if (state !== 'playing') return;
   state = 'won';
-  const reward = score;
-  if (!isTest && reward > 0) Core.addCustards(reward, 'game:' + game.id);
-  overlay.className = 'overlay win show';
-  ovTitle.textContent = 'VOCÊ VENCEU';
-  ovMsg.textContent = 'Objetivos concluídos. Bom trabalho, sobrevivente.';
-  if (isTest) ovReward.textContent = '(modo teste — sem recompensa)';
-  else ovReward.textContent = reward > 0 ? '+' + reward + ' Custards salvos!' : 'Sem custards coletados';
+  if (!isTest && score > 0) CORE.addCustards(score, 'game:' + game.id);
+  const ov = document.getElementById('overlay');
+  ov.className = 'overlay win show';
+  document.getElementById('ovTitle').textContent = 'VOCÊ VENCEU';
+  document.getElementById('ovMsg').textContent = 'Objetivos concluídos.';
+  document.getElementById('ovReward').textContent = isTest ? '(modo teste)' : (score > 0 ? '+' + score + ' Custards salvos!' : '');
 }
 
-/* =========================================================
-   Initial render
-========================================================= */
 renderer.render(scene, camera);
 </script>
-</body>
-</html>
+</body></html>
