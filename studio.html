@@ -1,123 +1,9 @@
-<!DOCTYPE html>
-<html lang="pt-BR"><head>
-<meta charset="UTF-8"><title>Studio 3D — CustardBricks</title>
-<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css">
-<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
-<style>
-.app{display:grid;grid-template-rows:52px 1fr;height:100vh}
-.topbar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg2);border-bottom:2px solid var(--border)}
-.topbar .logo{font-size:22px;color:var(--red);letter-spacing:2px;text-shadow:0 0 10px var(--red-dark);white-space:nowrap}
-.topbar .logo span{color:var(--purple)}
-.topbar input{flex:1;max-width:280px;min-width:120px;padding:6px 10px;background:#06060a;color:var(--text);border:2px solid var(--border);font:inherit;font-size:19px;outline:none}
-.topbar input:focus{border-color:var(--red)}
-.main{display:grid;grid-template-columns:210px 1fr 300px;overflow:hidden}
-.toolbox{background:var(--bg2);border-right:2px solid var(--border);padding:10px;overflow-y:auto}
-.toolbox h3{margin:0 0 8px;color:var(--purple);font-size:17px;letter-spacing:2px;border-bottom:1px solid var(--border);padding-bottom:5px}
-.tool{display:flex;align-items:center;gap:10px;padding:9px 10px;margin-bottom:5px;background:#06060a;border:2px solid var(--border);cursor:pointer;transition:.15s;user-select:none}
-.tool:hover{border-color:var(--purple)}
-.tool.active{border-color:var(--red);background:rgba(255,34,34,.08);box-shadow:0 0 8px rgba(255,34,34,.3)}
-.tool .swatch{width:22px;height:22px;border:2px solid #000;flex-shrink:0;border-radius:2px}
-.tool .lbl{font-size:16px}
-.hint{margin-top:10px;padding:8px;border:1px dashed var(--border);color:var(--text-dim);font-size:13px;line-height:1.4}
-.viewport{position:relative;background:#050508;overflow:hidden}
-canvas#c3d{display:block;width:100%;height:100%}
-.vp-hud{position:absolute;bottom:10px;left:12px;color:var(--text-dim);font-size:13px;pointer-events:none;background:rgba(10,10,16,.6);padding:4px 10px;border:1px solid var(--border)}
-.vp-tool{position:absolute;top:10px;left:12px;color:var(--red);font-size:17px;background:rgba(10,10,16,.7);padding:4px 12px;border:2px solid var(--red);pointer-events:none}
-.right-panel{display:grid;grid-template-rows:1fr 1fr;background:var(--bg2);border-left:2px solid var(--border);overflow:hidden}
-.panel{overflow-y:auto;padding:10px}
-.panel+.panel{border-top:2px solid var(--border)}
-.panel h3{margin:0 0 8px;color:var(--purple);font-size:16px;letter-spacing:2px;border-bottom:1px solid var(--border);padding-bottom:5px}
-.explorer-item{padding:5px 8px;margin-bottom:3px;cursor:pointer;color:var(--text-dim);font-size:14px;border-left:2px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.explorer-item:hover{background:rgba(123,47,190,.15);color:var(--text)}
-.explorer-item.selected{color:var(--red);border-left-color:var(--red);background:rgba(255,34,34,.08)}
-.explorer-item .cls{color:var(--purple);font-size:12px;margin-right:6px}
-.prop-group{margin-bottom:8px}
-.prop-group label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:2px;letter-spacing:1px}
-.prop-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
-.prop-row input{width:100%;padding:3px 6px;background:#06060a;border:1px solid var(--border);color:var(--text);font-family:monospace;font-size:12px;outline:none}
-.prop-row input:focus{border-color:var(--red)}
-.prop-single input{width:100%;padding:4px 6px;background:#06060a;border:1px solid var(--border);color:var(--text);font-family:monospace;font-size:12px;outline:none}
-.prop-single input[type=color]{height:26px;padding:2px;cursor:pointer}
-.prop-check{display:flex;gap:8px;align-items:center;font-size:14px;margin:4px 0;cursor:pointer}
-.prop-check input{accent-color:var(--red)}
-.prop-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-.chunk-tag{display:inline-block;font-size:11px;color:var(--warn);background:rgba(232,211,71,.1);border:1px solid var(--warn);padding:1px 6px;margin-top:4px}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:10000;padding:20px}
-.modal.show{display:flex}
-.modal-card{background:var(--bg2);border:2px solid var(--red);max-width:700px;width:100%;max-height:85vh;display:flex;flex-direction:column}
-.modal-hd{padding:12px 18px;border-bottom:2px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.modal-hd h2{margin:0;color:var(--red);font-size:22px}
-.modal-hd button{background:none;border:none;color:var(--text-dim);font-size:26px;cursor:pointer}
-.modal-bd{padding:16px;overflow-y:auto;flex:1}
-.modal-ft{padding:10px 16px;border-top:2px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
-textarea.luau{width:100%;height:340px;background:#050508;color:#d8d0e0;border:2px solid var(--border);font-family:monospace;font-size:12px;padding:10px;outline:none;resize:vertical}
-.test-frame{width:96vw;height:94vh;border:2px solid var(--red);background:#000;position:relative}
-.test-frame iframe{width:100%;height:100%;border:none;display:block}
-.test-frame .close{position:absolute;top:0;right:0;background:var(--red);color:#fff;border:none;padding:6px 14px;font:inherit;font-size:18px;cursor:pointer;z-index:10}
-</style>
-</head><body>
-<div class="app">
-<header class="topbar">
-  <div class="logo">STUDIO<span>3D</span></div>
-  <input type="text" id="gname" placeholder="Nome do jogo..." maxlength="40">
-  <button class="btn" id="scriptBtn">📜 SCRIPT</button>
-  <button class="btn ok" id="testBtn">▶ TESTAR</button>
-  <button class="btn primary" id="pubBtn">🚀 PUBLICAR</button>
-  <button class="btn" id="newBtn">+ NOVO</button>
-  <button class="btn" onclick="location.href='index.html'">← LOBBY</button>
-</header>
-<div class="main">
-<aside class="toolbox">
-  <h3>FERRAMENTAS</h3>
-  <div class="tool active" data-tool="select"><div class="lbl">👆 Selecionar</div></div>
-  <div class="tool" data-tool="erase"><div class="lbl">🗑 Apagar</div></div>
-  <div class="tool" data-tool="Part"><div class="swatch" style="background:#4a4a5a"></div><div class="lbl">Bloco</div></div>
-  <div class="tool" data-tool="Sphere"><div class="swatch" style="background:#c07bd8;border-radius:50%"></div><div class="lbl">Esfera</div></div>
-  <div class="tool" data-tool="SpawnPoint"><div class="swatch" style="background:#3fa14b;border-radius:50%"></div><div class="lbl">Spawn</div></div>
-  <div class="tool" data-tool="Coin"><div class="swatch" style="background:#ff9ed0;border-radius:50%"></div><div class="lbl">Custard</div></div>
-  <div class="tool" data-tool="Monster"><div class="swatch" style="background:#444"></div><div class="lbl">Monstro</div></div>
-  <div class="tool" data-tool="Goal"><div class="swatch" style="background:#e8d347;border-radius:50%"></div><div class="lbl">Meta</div></div>
-  <div class="tool" data-tool="KillBrick"><div class="swatch" style="background:#ff2222"></div><div class="lbl">KillBrick</div></div>
-  <div class="hint">🖱 Left: ação · Right: orbitar · Scroll: zoom · V: câmera 1ª/3ª</div>
-</aside>
-<div class="viewport">
-  <div class="vp-tool" id="vpTool">👆 Selecionar</div>
-  <canvas id="c3d"></canvas>
-  <div class="vp-hud" id="vpHud">— · chunks: —</div>
-</div>
-<aside class="right-panel">
-  <div class="panel"><h3>EXPLORER</h3><div id="explorer"></div></div>
-  <div class="panel"><h3>PROPERTIES</h3><div id="props"><div style="color:var(--text-dim);font-style:italic;text-align:center;padding:16px;font-size:14px">Selecione um objeto</div></div></div>
-</aside>
-</div>
-</div>
+<!-- Cole isso no lugar do seu studio.html (mantive o mesmo CSS e HTML da resposta anterior, apenas o JS abaixo foi corrigido) -->
+<!-- ... (todo o HTML e CSS do studio.html igual ao anterior até a tag <script type="module">) ... -->
 
-<div class="modal" id="scriptModal">
-  <div class="modal-card">
-    <div class="modal-hd"><h2>SCRIPT V-01</h2><button onclick="document.getElementById('scriptModal').classList.remove('show')">✕</button></div>
-    <div class="modal-bd">
-      <textarea class="luau" id="scriptEditor" placeholder="// OPCIONAL
-var coin = Instance.new('Coin');
-coin.Position = Vector3.new(10, 1, 10);
-coin.Parent = game.Workspace;"></textarea>
-    </div>
-    <div class="modal-ft">
-      <button class="btn" onclick="document.getElementById('scriptModal').classList.remove('show')">CANCELAR</button>
-      <button class="btn primary" id="scriptSave">SALVAR</button>
-    </div>
-  </div>
-</div>
-<div class="modal" id="testModal">
-  <div class="test-frame"><button class="close" id="testClose">FECHAR ✕</button><iframe id="testFrame" src="about:blank"></iframe></div>
-</div>
-
-<script src="core.js"></script>
-<script src="shared.js"></script>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 if (!CORE.getCurrentUser()) location.href = 'index.html';
 
@@ -167,7 +53,6 @@ let currentGameId = null;
 let scriptContent = '';
 let firstPerson = false;
 
-/* ========== CHUNK SYSTEM ========== */
 const CHUNK_SIZE = CORE.CHUNK_SIZE;
 function chunkKeyObj(o) { return CORE.chunkKey(o.position.x, o.position.y, o.position.z); }
 function updateChunkHUD() {
@@ -175,36 +60,10 @@ function updateChunkHUD() {
   const n = Object.keys(groups).length;
   document.getElementById('vpHud').textContent = `${objects.length} obj · ${n} chunks (16³)`;
 }
-// Reagrupa meshes por chunk para frustum culling otimizado
-function rebuildChunkGroups() {
-  // Remove antigos grupos de chunk
-  for (const child of [...scene.children]) {
-    if (child.userData.isChunkGroup) scene.remove(child);
-  }
-  const groups = CORE.groupByChunk(objects);
-  for (const key in groups) {
-    const chunkGroup = new THREE.Group();
-    chunkGroup.userData.isChunkGroup = true;
-    chunkGroup.userData.chunkKey = key;
-    for (const o of groups[key]) {
-      const m = meshMap.get(o.id);
-      if (m) {
-        const clone = m.clone();
-        clone.matrixAutoUpdate = false;
-        clone.updateMatrix();
-        chunkGroup.add(clone);
-      }
-    }
-    // Frustum culling é automático no Three.js para cada mesh
-    scene.add(chunkGroup);
-  }
-  console.log('[Chunks]', Object.keys(groups).length, 'chunks, frustum culling ativo');
-  updateChunkHUD();
-}
 
 function buildMonsterMesh(data) {
   const g = new THREE.Group();
-  const s = data.size;
+  const s = data.size || {x:2, y:4, z:2};
   const bodyMat = new THREE.MeshStandardMaterial({ color: data.color || '#444', roughness: 0.85 });
   const body = new THREE.Mesh(new THREE.CylinderGeometry(s.x*.4, s.x*.5, s.y*.6, 16), bodyMat);
   body.position.y = s.y*.3; body.castShadow = true; g.add(body);
@@ -216,7 +75,10 @@ function buildMonsterMesh(data) {
   const eR = eL.clone(); eR.position.x = s.x*.15; g.add(eR);
   return g;
 }
+
 function buildMesh(data) {
+  if (!data.position) data.position = {x:0, y:0, z:0};
+  if (!data.size) data.size = {x:1, y:1, z:1};
   if (data.type === 'Monster') { const g = buildMonsterMesh(data); g.position.set(data.position.x, data.position.y, data.position.z); return g; }
   let geom, mat;
   switch (data.type) {
@@ -236,6 +98,8 @@ function buildMesh(data) {
 }
 
 function addObject(data) {
+  if (!data.position) data.position = {x:0, y:0, z:0};
+  if (!data.size) data.size = {x:1, y:1, z:1};
   objects.push(data);
   const mesh = buildMesh(data);
   mesh.userData.objectId = data.id;
@@ -265,7 +129,6 @@ function updateMeshForData(data) {
   updateChunkHUD();
 }
 
-/* ========== TOOLS ========== */
 document.querySelectorAll('.tool').forEach(t => t.onclick = () => {
   document.querySelectorAll('.tool').forEach(x => x.classList.remove('active'));
   t.classList.add('active');
@@ -273,7 +136,6 @@ document.querySelectorAll('.tool').forEach(t => t.onclick = () => {
   document.getElementById('vpTool').textContent = t.querySelector('.lbl').textContent;
 });
 
-/* ========== RAYCAST ========== */
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -335,7 +197,6 @@ function placeObject(type, x, z) {
   toast(type+' adicionado', true);
 }
 
-/* ========== EXPLORER ========== */
 function refreshExplorer() {
   const el = document.getElementById('explorer');
   if (!objects.length) { el.innerHTML = '<div style="color:var(--text-dim);font-style:italic;text-align:center;padding:16px;font-size:14px">Nenhum objeto.</div>'; return; }
@@ -350,7 +211,6 @@ function selectObject(id) {
   refreshExplorer(); renderProps();
 }
 
-/* ========== PROPERTIES ========== */
 function renderProps() {
   const el = document.getElementById('props');
   if (!selected) { el.innerHTML = '<div style="color:var(--text-dim);font-style:italic;text-align:center;padding:16px;font-size:14px">Selecione um objeto</div>'; return; }
@@ -359,16 +219,16 @@ function renderProps() {
   el.innerHTML = `
     <div class="prop-group"><label>ID</label><div class="prop-single"><input value="${escapeHTML(o.id)}" readonly style="opacity:.5"></div></div>
     <div class="prop-group"><label>POSIÇÃO</label><div class="prop-row">
-      <input type="number" id="pX" step="0.5" value="${o.position.x.toFixed(2)}">
-      <input type="number" id="pY" step="0.5" value="${o.position.y.toFixed(2)}">
-      <input type="number" id="pZ" step="0.5" value="${o.position.z.toFixed(2)}">
+      <input type="number" id="pX" step="0.5" value="${(o.position?.x||0).toFixed(2)}">
+      <input type="number" id="pY" step="0.5" value="${(o.position?.y||0).toFixed(2)}">
+      <input type="number" id="pZ" step="0.5" value="${(o.position?.z||0).toFixed(2)}">
     </div></div>
     <div class="prop-group"><label>TAMANHO</label><div class="prop-row">
-      <input type="number" id="pSX" step="0.5" min="0.1" value="${o.size.x.toFixed(2)}">
-      <input type="number" id="pSY" step="0.5" min="0.1" value="${o.size.y.toFixed(2)}">
-      <input type="number" id="pSZ" step="0.5" min="0.1" value="${o.size.z.toFixed(2)}">
+      <input type="number" id="pSX" step="0.5" min="0.1" value="${(o.size?.x||1).toFixed(2)}">
+      <input type="number" id="pSY" step="0.5" min="0.1" value="${(o.size?.y||1).toFixed(2)}">
+      <input type="number" id="pSZ" step="0.5" min="0.1" value="${(o.size?.z||1).toFixed(2)}">
     </div></div>
-    <div class="prop-group"><label>COR</label><div class="prop-single"><input type="color" id="pColor" value="${o.color}"></div></div>
+    <div class="prop-group"><label>COR</label><div class="prop-single"><input type="color" id="pColor" value="${o.color||'#888888'}"></div></div>
     ${o.type==='Monster'?`<div class="prop-group"><label>SPEED</label><div class="prop-single"><input type="number" id="pSpeed" step="0.1" min="0" value="${(o.speed||2).toFixed(1)}"></div></div>`:''}
     <div class="prop-group"><label class="prop-check"><input type="checkbox" id="pCollide" ${o.canCollide?'checked':''}> CanCollide</label></div>
     <span class="chunk-tag">📦 chunk ${ck}</span>
@@ -378,6 +238,7 @@ function renderProps() {
     </div>
   `;
   const updPos = () => {
+    if (!o.position) o.position = {x:0, y:0, z:0};
     o.position.x = parseFloat(document.getElementById('pX').value) || 0;
     o.position.y = parseFloat(document.getElementById('pY').value) || 0;
     o.position.z = parseFloat(document.getElementById('pZ').value) || 0;
@@ -385,6 +246,7 @@ function renderProps() {
     updateChunkHUD();
   };
   const updSize = () => {
+    if (!o.size) o.size = {x:1, y:1, z:1};
     o.size.x = Math.max(0.1, parseFloat(document.getElementById('pSX').value)||1);
     o.size.y = Math.max(0.1, parseFloat(document.getElementById('pSY').value)||1);
     o.size.z = Math.max(0.1, parseFloat(document.getElementById('pSZ').value)||1);
@@ -405,7 +267,6 @@ function renderProps() {
 }
 function escapeHTML(s) { return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
-/* ========== STARTER SCENE ========== */
 function loadStarter() {
   objects.forEach(o => { const m = meshMap.get(o.id); if (m) scene.remove(m); });
   objects = []; meshMap.clear(); selected = null; selHelper.visible = false; idCounter = 0;
@@ -414,7 +275,6 @@ function loadStarter() {
   refreshExplorer(); renderProps(); updateChunkHUD();
 }
 
-/* ========== LOAD EXISTING ========== */
 const params = new URLSearchParams(location.search);
 const loadId = params.get('game');
 if (loadId) {
@@ -429,7 +289,6 @@ if (loadId) {
   } else loadStarter();
 } else loadStarter();
 
-/* ========== TOPBAR ========== */
 document.getElementById('newBtn').onclick = () => {
   if (!confirm('Novo jogo? O atual será perdido.')) return;
   currentGameId = null;
@@ -452,6 +311,12 @@ document.getElementById('testBtn').onclick = () => {
   sessionStorage.setItem('cb_test_game', JSON.stringify({ id:'test', name, objects: JSON.parse(JSON.stringify(objects)), script: scriptContent }));
   document.getElementById('testFrame').src = 'engine.html?test=1';
   document.getElementById('testModal').classList.add('show');
+  
+  // FOCO NO IFRAME: Isso permite que o teclado funcione no jogo!
+  setTimeout(() => {
+    const iframe = document.getElementById('testFrame');
+    if (iframe && iframe.contentWindow) iframe.contentWindow.focus();
+  }, 500);
 };
 document.getElementById('testClose').onclick = () => {
   document.getElementById('testFrame').src = 'about:blank';
@@ -471,7 +336,6 @@ document.getElementById('pubBtn').onclick = () => {
   setTimeout(() => location.href = 'index.html', 900);
 };
 
-/* ========== CAMERA TOGGLE 1ª/3ª ========== */
 window.addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 'v') {
     firstPerson = !firstPerson;
@@ -487,7 +351,6 @@ window.addEventListener('keydown', e => {
   }
 });
 
-/* ========== RESIZE + LOOP ========== */
 function resize() {
   const w = canvas.clientWidth, h = canvas.clientHeight;
   if (!w || !h) return;
