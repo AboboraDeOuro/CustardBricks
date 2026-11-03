@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CustardBricks — Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a10; --bg2: #12121c; --bg3: #1a1a26;
+    --red: #ff2222; --red-dark: #a01515;
+    --purple: #7b2fbe; --purple-dark: #4a1a72;
+    --text: #d8d0e0; --text-dim: #8a839a;
+    --border: #2a2a3a; --warn: #e8d347; --ok: #3fa14b;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--bg); color: var(--text);
+    font-family: 'VT323', monospace; font-size: 18px;
+    overflow: hidden;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.8) 100%);
+    z-index: 9990;
+  }
+  button, input, textarea { font-family: 'VT323', monospace; }
+
+  .app { display: grid; grid-template-rows: 52px 1fr; height: 100vh; }
+
+  /* Top bar */
+  .topbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px;
+    background: var(--bg2);
+    border-bottom: 2px solid var(--border);
+  }
+  .topbar .logo {
+    font-size: 22px; color: var(--red);
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px var(--red-dark);
+    margin-right: 10px;
+  }
+  .topbar .logo span { color: var(--purple); }
+  .topbar input.gname {
+    flex: 1; max-width: 280px; min-width: 120px;
+    padding: 6px 12px;
+    background: #06060a; color: var(--text);
+    border: 2px solid var(--border);
+    font-size: 20px; outline: none;
+  }
+  .topbar input.gname:focus { border-color: var(--red); box-shadow: 0 0 8px rgba(255,34,34,0.3); }
+  .btn {
+    padding: 6px 14px;
+    background: var(--bg3); color: var(--text);
+    border: 2px solid var(--border);
+    font-size: 18px; cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+  .btn:hover { border-color: var(--red); color: var(--red); }
+  .btn.primary { background: var(--red-dark); border-color: var(--red); color: #fff; }
+  .btn.primary:hover { background: var(--red); box-shadow: 0 0 14px var(--red); }
+  .btn.ok { background: #1a5f24; border-color: var(--ok); color: #fff; }
+  .btn.ok:hover { background: var(--ok); }
+
+  /* Main */
+  .main { display: grid; grid-template-columns: 1fr 340px; overflow: hidden; }
+
+  /* Editor */
+  .editor-area {
+    display: flex; flex-direction: column;
+    background: #050508; overflow: hidden;
+  }
+  .editor-tabs {
+    display: flex;
+    background: var(--bg2);
+    border-bottom: 2px solid var(--border);
+  }
+  .editor-tab {
+    padding: 8px 18px;
+    background: transparent; border: none;
+    color: var(--text-dim); cursor: pointer;
+    font-size: 18px;
+    border-bottom: 3px solid transparent;
+    letter-spacing: 1px;
+  }
+  .editor-tab.active {
+    color: var(--red);
+    border-bottom-color: var(--red);
+    background: rgba(255,34,34,0.05);
+  }
+  .editor-wrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  textarea.code-editor {
+    width: 100%; height: 100%;
+    background: #050508;
+    color: #d8d0e0;
+    border: none; outline: none; resize: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; line-height: 1.55;
+    padding: 16px 16px 16px 50px;
+    tab-size: 2;
+  }
+  textarea.code-editor::selection { background: rgba(123,47,190,0.4); }
+  .line-numbers {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 44px;
+    background: #08080e;
+    border-right: 1px solid var(--border);
+    padding: 16px 8px 16px 0;
+    text-align: right;
+    color: #4a4a5a;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; line-height: 1.55;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--bg2);
+    border-left: 2px solid var(--border);
+    overflow-y: auto;
+    padding: 12px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .sidebar-section h3 {
+    margin: 0 0 8px;
+    color: var(--purple);
+    font-size: 18px;
+    letter-spacing: 2px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+  }
+  .snippet-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    background: #06060a;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 1px;
+  }
+  .snippet-btn:hover { border-color: var(--red); color: var(--red); }
+  .api-ref {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--text-dim);
+    background: #06060a;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .api-ref .c { color: var(--purple); }
+  .api-ref .s { color: var(--warn); }
+
+  /* Test modal */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.9);
+    display: none; align-items: center; justify-content: center;
+    z-index: 10000;
+  }
+  .modal-bg.show { display: flex; }
+  .test-frame {
+    width: 95vw; height: 92vh;
+    border: 2px solid var(--red);
+    background: #000;
+    position: relative;
+  }
+  .test-frame iframe {
+    width: 100%; height: 100%;
+    border: none; display: block;
+  }
+  .test-close {
+    position: absolute;
+    top: -1px; right: -1px;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    padding: 6px 14px;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 10;
+    letter-spacing: 1px;
+  }
+  .test-close:hover { background: #ff4444; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 30px; left: 50%;
+    transform: translateX(-50%) translateY(120px);
+    background: var(--bg2);
+    border: 2px solid var(--red);
+    color: var(--text);
+    padding: 10px 24px;
+    z-index: 11000;
+    transition: transform 0.3s;
+    box-shadow: 0 0 20px rgba(255,34,34,0.5);
+    max-width: 90vw;
+    text-align: center;
+    font-size: 18px;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.ok { border-color: var(--ok); box-shadow: 0 0 20px rgba(63,161,75,0.5); }
+
+  /* Description modal */
+  .info-modal {
+    background: var(--bg2);
+    border: 2px solid var(--red);
+    padding: 24px;
+    max-width: 500px; width: 90%;
+    box-shadow: 0 0 40px rgba(255,34,34,0.4);
+  }
+  .info-modal h2 {
+    margin: 0 0 16px;
+    color: var(--red); letter-spacing: 2px;
+  }
+  .info-modal textarea {
+    width: 100%; min-height: 100px;
+    background: #06060a; color: var(--text);
+    border: 2px solid var(--border);
+    padding: 10px; font-size: 16px;
+    outline: none; resize: vertical;
+  }
+  .info-modal textarea:focus { border-color: var(--red); }
+  .info-modal .actions {
+    display: flex; gap: 10px; justify-content: flex-end;
+    margin-top: 14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="logo">STUDIO<span>V-01</span></div>
+    <input class="gname" id="gameName" placeholder="Nome do jogo..." maxlength="40" />
+    <button class="btn" onclick="Studio.openDescription()">📝 DESCRIÇÃO</button>
+    <button class="btn ok" onclick="Studio.testGame()">▶ TESTAR</button>
+    <button class="btn primary" onclick="Studio.publish()">🚀 PUBLICAR</button>
+    <button class="btn" onclick="location.href='index.html'">← LOBBY</button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- EDITOR -->
+    <div class="editor-area">
+      <div class="editor-tabs">
+        <button class="editor-tab active">main.lua</button>
+      </div>
+      <div class="editor-wrap">
+        <div class="line-numbers" id="lineNumbers">1</div>
+        <textarea class="code-editor" id="codeEditor" spellcheck="false" wrap="off"></textarea>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h3>INSERIR OBJETO</h3>
+        <button class="snippet-btn" onclick="Studio.insertSnippet('part')">🧱 Part (parede)</button>
+        <button class="snippet-btn" onclick="Studio.insertSnippet('spawn')">🟢 SpawnPoint</button>
+        <button class="snippet-btn" onclick="Studio.insertSnippet('coin')">🍮 Coin (custard)</button>
+        <button class="snippet-btn" onclick="Studio.insertSnippet('monster')">👹 Monster</button>
+        <button class="snippet-btn" onclick="Studio.insertSnippet('goal')">⭐ Goal</button>
+        <button class="snippet-btn" onclick="Studio.insertSnippet('killbrick')">💀 KillBrick</button>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>API V-01</h3>
+        <div class="api-ref"><span class="c">Instance.new</span>(<span class="s">"Part"</span>)
+<span class="c">Instance.new</span>(<span class="s">"SpawnPoint"</span>)
+<span class="c">Instance.new</span>(<span class="s">"Coin"</span>)
+<span class="c">Instance.new</span>(<span class="s">"Monster"</span>)
+<span class="c">Instance.new</span>(<span class="s">"Goal"</span>)
+
+<span class="c">Vector2.new</span>(x, y)
+<span class="c">Color3.fromRGB</span>(r,g,b)
+
+obj.Position = {x, y}
+obj.Size     = {x, y}
+obj.Color    = <span class="s">"#ff2222"</span>
+obj.Speed    = 2      <span style="opacity:0.5">// monstro</span>
+obj.Touched  = function(other) {}
+obj.Parent   = game.Workspace
+obj.Destroy()
+
+game.Workspace
+game.Players.LocalPlayer
+player.Kill()
+
+print(...)
+</div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- TEST MODAL -->
+<div class="modal-bg" id="testModal">
+  <div class="test-frame">
+    <button class="test-close" onclick="Studio.closeTest()">FECHAR ✕</button>
+    <iframe id="testFrame" src="about:blank"></iframe>
+  </div>
+</div>
+
+<!-- DESCRIPTION MODAL -->
+<div class="modal-bg" id="descModal">
+  <div class="info-modal">
+    <h2>DESCRIÇÃO</h2>
+    <textarea id="descInput" placeholder="Descreva seu jogo..."></textarea>
+    <div class="actions">
+      <button class="btn" onclick="Studio.closeDescription()">CANCELAR</button>
+      <button class="btn primary" onclick="Studio.saveDescription()">SALVAR</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="core.js"></script>
+<script>
+/* ============================================================
+   STUDIO
+   ============================================================ */
+const Studio = (function () {
+  'use strict';
+
+  if (!CORE.getCurrentUser()) {
+    alert('Faça login para acessar o Studio.');
+    window.location.href = 'index.html';
+    return {};
+  }
+
+  const editor = document.getElementById('codeEditor');
+  const lineNumbers = document.getElementById('lineNumbers');
+  const gameName = document.getElementById('gameName');
+  let currentGameId = null;
+
+  const SNIPPETS = {
+    part: `// Parede
+var wall = Instance.new("Part");
+wall.Position = Vector2.new(400, 100);
+wall.Size = Vector2.new(200, 20);
+wall.Color = "#2a2a3a";
+wall.Parent = game.Workspace;
+`,
+    spawn: `// Spawn do jogador
+var spawn = Instance.new("SpawnPoint");
+spawn.Position = Vector2.new(100, 400);
+spawn.Parent = game.Workspace;
+`,
+    coin: `// Custard coletável
+var coin = Instance.new("Coin");
+coin.Position = Vector2.new(200, 200);
+coin.Parent = game.Workspace;
+`,
+    monster: `// Monstro perseguidor
+var monster = Instance.new("Monster");
+monster.Position = Vector2.new(700, 100);
+monster.Speed = 2;
+monster.Parent = game.Workspace;
+`,
+    goal: `// Objetivo (win)
+var goal = Instance.new("Goal");
+goal.Position = Vector2.new(400, 400);
+goal.Parent = game.Workspace;
+`,
+    killbrick: `// KillBrick (parte que mata)
+var kill = Instance.new("Part");
+kill.Position = Vector2.new(400, 400);
+kill.Size = Vector2.new(40, 40);
+kill.Color = "#ff0000";
+kill.Touched = function(other) {
+  if (other.ClassName === "Player") {
+    other.Kill();
+  }
+};
+kill.Parent = game.Workspace;
+`
+  };
+
+  const DEFAULT_SCRIPT = `// ============================================
+// NOVO JOGO — V-01 Engine
+// ============================================
+// Objetos disponíveis:
+//   Instance.new("Part")       — parede/bloco
+//   Instance.new("SpawnPoint") — spawn do jogador
+//   Instance.new("Coin")       — custard coletável
+//   Instance.new("Monster")    — monstro perseguidor
+//   Instance.new("Goal")       — objetivo (win)
+
+// Bordas do mundo
+[[0,0,800,20],[0,780,800,20],[0,0,20,800],[780,0,20,800]].forEach(function(w){
+  var wall = Instance.new("Part");
+  wall.Position = Vector2.new(w[0]+w[2]/2, w[1]+w[3]/2);
+  wall.Size = Vector2.new(w[2], w[3]);
+  wall.Color = "#2a2a3a";
+  wall.Parent = game.Workspace;
+});
+
+// Spawn
+var spawn = Instance.new("SpawnPoint");
+spawn.Position = Vector2.new(100, 100);
+spawn.Parent = game.Workspace;
+
+// Custards
+[[200,200],[600,200],[200,600],[600,600],[400,400]].forEach(function(p){
+  var coin = Instance.new("Coin");
+  coin.Position = Vector2.new(p[0], p[1]);
+  coin.Parent = game.Workspace;
+});
+
+// Monstro
+var monster = Instance.new("Monster");
+monster.Position = Vector2.new(700, 100);
+monster.Speed = 2;
+monster.Parent = game.Workspace;
+
+print("Boa sorte!");
+`;
+
+  /* ---------- Init ---------- */
+  editor.value = DEFAULT_SCRIPT;
+  updateLineNumbers();
+  editor.addEventListener('input', updateLineNumbers);
+  editor.addEventListener('scroll', () => {
+    lineNumbers.scrollTop = editor.scrollTop;
+  });
+
+  function updateLineNumbers() {
+    const lines = editor.value.split('\n').length;
+    const nums = [];
+    for (let i = 1; i <= lines; i++) nums.push(i);
+    lineNumbers.innerHTML = nums.join('<br>');
+    lineNumbers.scrollTop = editor.scrollTop;
+  }
+
+  /* ---------- Toast ---------- */
+  const toastEl = document.getElementById('toast');
+  let toastTimer = null;
+  function toast(msg, ok) {
+    toastEl.textContent = msg;
+    toastEl.classList.toggle('ok', !!ok);
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
+  }
+
+  /* ---------- Snippets ---------- */
+  function insertSnippet(key) {
+    const snippet = SNIPPETS[key];
+    if (!snippet) return;
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const text = editor.value;
+    editor.value = text.slice(0, start) + '\n' + snippet + '\n' + text.slice(end);
+    const newPos = start + snippet.length + 2;
+    editor.setSelectionRange(newPos, newPos);
+    editor.focus();
+    updateLineNumbers();
+    toast('Snippet inserido', true);
+  }
+
+  /* ---------- Test ---------- */
+  function testGame() {
+    const name = gameName.value.trim() || 'Test';
+    const script = editor.value;
+    const game = {
+      id: 'test_' + Date.now(),
+      name,
+      author: 'test',
+      script,
+      official: false,
+      plays: 0
+    };
+    sessionStorage.setItem('cb_test_game', JSON.stringify(game));
+    document.getElementById('testFrame').src = 'engine.html?test=1';
+    document.getElementById('testModal').classList.add('show');
+  }
+
+  function closeTest() {
+    document.getElementById('testFrame').src = 'about:blank';
+    document.getElementById('testModal').classList.remove('show');
+  }
+
+  /* ---------- Description ---------- */
+  function openDescription() {
+    const user = CORE.getCurrentUser();
+    const myGames = CORE.getMyGames();
+    const current = currentGameId ? CORE.getGame(currentGameId) : null;
+    document.getElementById('descInput').value = current ? current.description : '';
+    document.getElementById('descModal').classList.add('show');
+  }
+  function closeDescription() {
+    document.getElementById('descModal').classList.remove('show');
+  }
+  function saveDescription() {
+    closeDescription();
+    toast('Descrição salva', true);
+  }
+
+  /* ---------- Publish ---------- */
+  function publish() {
+    const name = gameName.value.trim();
+    const script = editor.value;
+    const description = document.getElementById('descInput').value.trim();
+
+    if (!name) { toast('Digite um nome para o jogo', false); gameName.focus(); return; }
+    if (!script.trim()) { toast('Script vazio', false); return; }
+
+    const r = CORE.publishGame({ id: currentGameId, name, description, script });
+    if (!r.ok) { toast(r.error, false); return; }
+
+    currentGameId = r.game.id;
+    toast('Jogo publicado! Redirecionando...', true);
+    setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+  }
+
+  /* ---------- Load existing game (?game=id) ---------- */
+  const params = new URLSearchParams(location.search);
+  const loadId = params.get('game');
+  if (loadId) {
+    const g = CORE.getGame(loadId);
+    if (g && g.authorId === CORE.getSession()) {
+      gameName.value = g.name;
+      editor.value = g.script;
+      document.getElementById('descInput').value = g.description;
+      currentGameId = g.id;
+      updateLineNumbers();
+    }
+  }
+
+  return {
+    insertSnippet, testGame, closeTest,
+    openDescription, closeDescription, saveDescription,
+    publish
+  };
+})();
+</script>
+</body>
+</html>
