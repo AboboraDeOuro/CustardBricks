@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8"><title>Avatar — CustardBricks</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head><body>
+<nav id="topnav" class="topnav"></nav>
+<main class="page">
+  <h1>SEU AVATAR</h1>
+  <div class="avatar-layout">
+    <div class="avatar-box">
+      <canvas id="avatarCanvas" width="260" height="260"></canvas>
+      <div class="avatar-name" id="avatarName">—</div>
+    </div>
+    <div class="slots-panel">
+      <div class="slot" data-slot="body"><h4>CORPO</h4><div id="slot-body"></div><div class="hint">clique para trocar</div></div>
+      <div class="slot" data-slot="face"><h4>ROSTO</h4><div id="slot-face"></div><div class="hint">clique para trocar</div></div>
+      <div class="slot" data-slot="accessory"><h4>ACESSÓRIO</h4><div id="slot-accessory"></div><div class="hint">clique para trocar</div></div>
+      <div class="slot" data-slot="effect"><h4>EFEITO</h4><div id="slot-effect"></div><div class="hint">clique para trocar</div></div>
+    </div>
+  </div>
+</main>
+<div class="modal-bg" id="invModal">
+  <div class="modal-card">
+    <div class="modal-hd"><h2 id="invTitle">ESCOLHER</h2><button class="modal-close" onclick="document.getElementById('invModal').classList.remove('show')">✕</button></div>
+    <div class="modal-bd"><div class="inventory-grid" id="invGrid"></div></div>
+  </div>
+</div>
+<script src="core.js"></script>
+<script src="shared.js"></script>
+<script>
+(function () {
+  const canvas = document.getElementById('avatarCanvas');
+  const ctx = canvas.getContext('2d');
+  let pickerSlot = null;
+
+  function draw() {
+    const av = CORE.getAvatar();
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = '#050508'; ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle = 'rgba(123,47,190,.12)';
+    for (let i=0;i<W;i+=20){ ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,H); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(W,i); ctx.stroke(); }
+    const cx = W/2, cy = H/2 + 10, R = 70;
+    // Effects behind
+    if (av.effect === 'fx_glow') { const g = ctx.createRadialGradient(cx,cy,20,cx,cy,110); g.addColorStop(0,'rgba(123,47,190,.7)'); g.addColorStop(1,'rgba(123,47,190,0)'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H); }
+    if (av.effect === 'fx_fire') { const g = ctx.createRadialGradient(cx,cy,20,cx,cy,130); g.addColorStop(0,'rgba(255,100,0,.55)'); g.addColorStop(1,'rgba(255,0,0,0)'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H); }
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.beginPath(); ctx.ellipse(cx, cy+R+10, R*.9, R*.25, 0, 0, Math.PI*2); ctx.fill();
+    const color = (CORE.getMarketItem(av.body)||{}).color || '#7b2fbe';
+    // Ears
+    ctx.fillStyle = color; ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(cx - R*.65, cy - R*.65, R*.22, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx + R*.65, cy - R*.65, R*.22, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    // Body
+    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    // Face white
+    ctx.fillStyle = 'rgba(255,255,255,.95)'; ctx.beginPath(); ctx.arc(cx, cy+8, R*.72, 0, Math.PI*2); ctx.fill();
+    // Eyes + mouth
+    ctx.fillStyle = '#000';
+    if (av.face === 'face_bloody') { ctx.shadowColor='#f00'; ctx.shadowBlur=15; ctx.fillStyle='#f00'; }
+    else if (av.face === 'face_glitch') { ctx.fillStyle='#f0f'; }
+    ctx.beginPath(); ctx.arc(cx-R*.25, cy-R*.05, R*.11, 0, Math.PI*2); ctx.arc(cx+R*.25, cy-R*.05, R*.11, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = av.face==='face_creepy'?'#a00':'#000';
+    ctx.lineWidth = R*.09;
+    ctx.beginPath(); ctx.arc(cx, cy+R*.15, R*.3, .15*Math.PI, .85*Math.PI); ctx.stroke();
+    // Accessory
+    ctx.strokeStyle = '#ddd'; ctx.fillStyle = '#ddd'; ctx.lineWidth = 3;
+    if (av.accessory === 'acc_antenna') {
+      ctx.beginPath(); ctx.moveTo(cx, cy-R*1.1); ctx.lineTo(cx, cy-R*1.8); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx, cy-R*1.85, R*.13, 0, Math.PI*2); ctx.fill();
+    } else if (av.accessory === 'acc_hat') {
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fillRect(cx-R*.55, cy-R*1.35, R*1.1, R*.15);
+      ctx.fillRect(cx-R*.4, cy-R*2.1, R*.8, R*.7);
+    } else if (av.accessory === 'acc_horns') {
+      ctx.fillStyle = '#a00';
+      ctx.beginPath(); ctx.moveTo(cx-R*.55, cy-R*.85); ctx.lineTo(cx-R*.75, cy-R*1.6); ctx.lineTo(cx-R*.3, cy-R*.95); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(cx+R*.55, cy-R*.85); ctx.lineTo(cx+R*.75, cy-R*1.6); ctx.lineTo(cx+R*.3, cy-R*.95); ctx.closePath(); ctx.fill();
+    } else if (av.accessory === 'acc_crown') {
+      ctx.fillStyle = '#e8b347';
+      ctx.beginPath(); ctx.moveTo(cx-R*.55, cy-R*1.05); ctx.lineTo(cx-R*.55, cy-R*1.65); ctx.lineTo(cx-R*.25, cy-R*1.35); ctx.lineTo(cx, cy-R*1.75); ctx.lineTo(cx+R*.25, cy-R*1.35); ctx.lineTo(cx+R*.55, cy-R*1.65); ctx.lineTo(cx+R*.55, cy-R*1.05); ctx.closePath(); ctx.fill();
+    } else if (av.accessory === 'acc_halo') {
+      ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 4; ctx.shadowColor='#ffd700'; ctx.shadowBlur=20;
+      ctx.beginPath(); ctx.ellipse(cx, cy-R*1.55, R*.4, R*.15, 0, 0, Math.PI*2); ctx.stroke(); ctx.shadowBlur = 0;
+    }
+  }
+
+  function renderSlot(slot) {
+    const av = CORE.getAvatar();
+    const item = CORE.getMarketItem(av[slot]);
+    if (!item) return;
+    const el = document.getElementById('slot-'+slot);
+    if (item.icon === 'swatch') el.innerHTML = `<span class="swatch" style="background:${item.color}"></span><div class="item-name">${escapeHTML(item.name)}</div>`;
+    else el.innerHTML = `<span class="item-icon">${item.icon}</span><div class="item-name">${escapeHTML(item.name)}</div>`;
+  }
+
+  function openPicker(slot) {
+    pickerSlot = slot;
+    const av = CORE.getAvatar();
+    const inv = CORE.getInventory();
+    const items = CORE.MARKET_ITEMS.filter(i => i.slot === slot && inv.includes(i.id));
+    document.getElementById('invTitle').textContent = 'ESCOLHER ' + slot.toUpperCase();
+    const grid = document.getElementById('invGrid');
+    grid.innerHTML = items.map(i => {
+      const eq = i.id === av[slot];
+      const iconHTML = i.icon === 'swatch' ? `<span class="swatch" style="background:${i.color}"></span>` : `<span class="icon">${i.icon}</span>`;
+      return `<div class="inv-item ${eq?'equipped':''}" data-id="${i.id}">${iconHTML}<div class="name">${escapeHTML(i.name)}</div></div>`;
+    }).join('') || '<div class="empty" style="grid-column:1/-1">Nenhum item nesta categoria. Compre no Mercado!</div>';
+    grid.querySelectorAll('.inv-item').forEach(el => el.onclick = () => {
+      const r = CORE.equipItem(el.dataset.id);
+      if (r.ok) { toast('Equipado!', true); document.getElementById('invModal').classList.remove('show'); draw(); renderSlot(slot); renderNav(); }
+      else toast(r.error, false);
+    });
+    document.getElementById('invModal').classList.add('show');
+  }
+
+  document.querySelectorAll('.slot').forEach(s => s.onclick = () => openPicker(s.dataset.slot));
+  const u = CORE.getCurrentUser();
+  document.getElementById('avatarName').textContent = '@' + u.username;
+  ['body','face','accessory','effect'].forEach(renderSlot);
+  draw();
+})();
+</script>
+</body></html>
