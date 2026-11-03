@@ -1,227 +1,126 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8" />
-<title>CustardBricks Studio 3D</title>
-<link href="https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono&display=swap" rel="stylesheet">
-<script type="importmap">
-{"imports":{
-  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-}}
-</script>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8"><title>Studio 3D — CustardBricks</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
 <style>
-  :root {
-    --bg:#0a0a10; --bg2:#12121c; --bg3:#1a1a26;
-    --red:#ff2222; --red-dark:#a01515;
-    --purple:#7b2fbe; --purple-dark:#4a1a72;
-    --text:#d8d0e0; --text-dim:#8a839a;
-    --border:#2a2a3a; --warn:#e8d347; --ok:#3fa14b;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);font-family:'VT323',monospace;font-size:18px;overflow:hidden}
-  body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,.85) 100%);z-index:9990}
-  body::after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(255,255,255,.02) 0,rgba(255,255,255,.02) 1px,transparent 1px,transparent 3px);z-index:9991;mix-blend-mode:overlay;animation:fl .15s infinite}
-  @keyframes fl{0%{opacity:.9}50%{opacity:1}100%{opacity:.85}}
-
-  .app{display:grid;grid-template-rows:52px 1fr;height:100vh}
-
-  .topbar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg2);border-bottom:2px solid var(--border)}
-  .topbar .logo{font-size:22px;color:var(--red);letter-spacing:2px;text-shadow:0 0 10px var(--red-dark);margin-right:8px;white-space:nowrap}
-  .topbar .logo span{color:var(--purple)}
-  .topbar input[type=text]{flex:1;max-width:280px;min-width:120px;padding:6px 10px;background:#06060a;color:var(--text);border:2px solid var(--border);font:inherit;outline:none}
-  .topbar input:focus{border-color:var(--red);box-shadow:0 0 8px rgba(255,34,34,.35)}
-
-  .btn{padding:6px 14px;background:var(--bg3);color:var(--text);border:2px solid var(--border);font:inherit;cursor:pointer;letter-spacing:1px;transition:.15s;white-space:nowrap}
-  .btn:hover{border-color:var(--red);color:var(--red)}
-  .btn.primary{background:var(--red-dark);border-color:var(--red);color:#fff}
-  .btn.primary:hover{background:var(--red);box-shadow:0 0 14px var(--red)}
-  .btn.ok{background:#1a5f24;border-color:var(--ok);color:#fff}
-  .btn.ok:hover{background:var(--ok)}
-
-  .main{display:grid;grid-template-columns:210px 1fr 300px;overflow:hidden}
-
-  /* TOOLBOX */
-  .toolbox{background:var(--bg2);border-right:2px solid var(--border);padding:10px;overflow-y:auto}
-  .toolbox h3{margin:0 0 8px;color:var(--purple);font-size:17px;letter-spacing:2px;border-bottom:1px solid var(--border);padding-bottom:5px}
-  .tool{display:flex;align-items:center;gap:10px;padding:9px 10px;margin-bottom:5px;background:#06060a;border:2px solid var(--border);cursor:pointer;transition:.15s;user-select:none}
-  .tool:hover{border-color:var(--purple)}
-  .tool.active{border-color:var(--red);background:rgba(255,34,34,.08);box-shadow:0 0 8px rgba(255,34,34,.3)}
-  .tool .swatch{width:22px;height:22px;border:2px solid #000;flex-shrink:0;border-radius:2px}
-  .tool .icon{width:22px;height:22px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;border:1px solid var(--border)}
-  .tool .lbl{font-size:16px}
-  .hint{margin-top:10px;padding:8px;border:1px dashed var(--border);color:var(--text-dim);font-size:13px;line-height:1.4}
-
-  /* VIEWPORT */
-  .viewport{position:relative;background:#050508;overflow:hidden}
-  canvas#c3d{display:block;width:100%;height:100%}
-  .vp-hud{position:absolute;bottom:10px;left:12px;color:var(--text-dim);font-size:14px;pointer-events:none;letter-spacing:1px;text-shadow:0 0 4px #000;background:rgba(10,10,16,.6);padding:4px 10px;border:1px solid var(--border)}
-  .vp-tool{position:absolute;top:10px;left:12px;color:var(--red);font-size:18px;letter-spacing:1px;background:rgba(10,10,16,.7);padding:4px 12px;border:2px solid var(--red);pointer-events:none}
-
-  /* RIGHT PANEL */
-  .right-panel{display:grid;grid-template-rows:1fr 1fr;background:var(--bg2);border-left:2px solid var(--border);overflow:hidden}
-  .panel{overflow-y:auto;padding:10px}
-  .panel+.panel{border-top:2px solid var(--border)}
-  .panel h3{margin:0 0 8px;color:var(--purple);font-size:17px;letter-spacing:2px;border-bottom:1px solid var(--border);padding-bottom:5px}
-  .explorer-item{padding:5px 8px;margin-bottom:3px;cursor:pointer;color:var(--text-dim);font-size:15px;border-left:2px solid transparent;border-radius:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .explorer-item:hover{background:rgba(123,47,190,.15);color:var(--text)}
-  .explorer-item.selected{color:var(--red);border-left-color:var(--red);background:rgba(255,34,34,.08)}
-  .explorer-item .cls{color:var(--purple);font-size:12px;margin-right:6px}
-  .empty{color:var(--text-dim);font-style:italic;text-align:center;padding:16px 0;font-size:14px}
-
-  .prop-group{margin-bottom:8px}
-  .prop-group label{display:block;font-size:13px;color:var(--text-dim);margin-bottom:2px;letter-spacing:1px}
-  .prop-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
-  .prop-row input{width:100%;padding:3px 6px;background:#06060a;border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none}
-  .prop-row input:focus{border-color:var(--red)}
-  .prop-single input[type=text],.prop-single input[type=number]{width:100%;padding:4px 6px;background:#06060a;border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none}
-  .prop-single input[type=color]{width:100%;height:26px;padding:2px;background:#06060a;border:1px solid var(--border);cursor:pointer}
-  .prop-check{display:flex;gap:8px;align-items:center;font-size:14px;margin:4px 0;cursor:pointer}
-  .prop-check input{accent-color:var(--red)}
-  .prop-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-
-  /* MODAL */
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:10000;padding:20px}
-  .modal.show{display:flex;animation:fadeIn .2s}
-  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-  .modal-card{background:var(--bg2);border:2px solid var(--red);max-width:800px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 0 40px rgba(255,34,34,.4)}
-  .modal-hd{padding:12px 18px;border-bottom:2px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-  .modal-hd h2{margin:0;color:var(--red);font-size:22px;letter-spacing:2px}
-  .modal-hd button{background:none;border:none;color:var(--text-dim);font-size:26px;cursor:pointer}
-  .modal-hd button:hover{color:var(--red)}
-  .modal-bd{padding:16px;overflow-y:auto;flex:1}
-  .modal-ft{padding:10px 16px;border-top:2px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
-  textarea.luau{width:100%;height:360px;background:#050508;color:#d8d0e0;border:2px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:13px;padding:12px;outline:none;resize:vertical;line-height:1.5}
-  textarea.luau:focus{border-color:var(--red)}
-  .api-help{background:#06060a;padding:10px;border:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);margin-top:10px;line-height:1.55;white-space:pre-wrap}
-  .api-help b{color:var(--purple)}
-
-  .test-frame{width:96vw;height:94vh;border:2px solid var(--red);background:#000;position:relative}
-  .test-frame iframe{width:100%;height:100%;border:none;display:block}
-  .test-frame .close{position:absolute;top:-1px;right:-1px;background:var(--red);color:#fff;border:none;padding:6px 14px;font:inherit;font-size:18px;cursor:pointer;z-index:10}
-
-  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--bg2);border:2px solid var(--red);color:var(--text);padding:10px 22px;z-index:11000;transition:transform .3s;box-shadow:0 0 20px rgba(255,34,34,.5);font-size:17px}
-  .toast.show{transform:translateX(-50%) translateY(0)}
-  .toast.ok{border-color:var(--ok);box-shadow:0 0 20px rgba(63,161,75,.5)}
+.app{display:grid;grid-template-rows:52px 1fr;height:100vh}
+.topbar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg2);border-bottom:2px solid var(--border)}
+.topbar .logo{font-size:22px;color:var(--red);letter-spacing:2px;text-shadow:0 0 10px var(--red-dark);white-space:nowrap}
+.topbar .logo span{color:var(--purple)}
+.topbar input{flex:1;max-width:280px;min-width:120px;padding:6px 10px;background:#06060a;color:var(--text);border:2px solid var(--border);font:inherit;font-size:19px;outline:none}
+.topbar input:focus{border-color:var(--red)}
+.main{display:grid;grid-template-columns:210px 1fr 300px;overflow:hidden}
+.toolbox{background:var(--bg2);border-right:2px solid var(--border);padding:10px;overflow-y:auto}
+.toolbox h3{margin:0 0 8px;color:var(--purple);font-size:17px;letter-spacing:2px;border-bottom:1px solid var(--border);padding-bottom:5px}
+.tool{display:flex;align-items:center;gap:10px;padding:9px 10px;margin-bottom:5px;background:#06060a;border:2px solid var(--border);cursor:pointer;transition:.15s;user-select:none}
+.tool:hover{border-color:var(--purple)}
+.tool.active{border-color:var(--red);background:rgba(255,34,34,.08);box-shadow:0 0 8px rgba(255,34,34,.3)}
+.tool .swatch{width:22px;height:22px;border:2px solid #000;flex-shrink:0;border-radius:2px}
+.tool .lbl{font-size:16px}
+.hint{margin-top:10px;padding:8px;border:1px dashed var(--border);color:var(--text-dim);font-size:13px;line-height:1.4}
+.viewport{position:relative;background:#050508;overflow:hidden}
+canvas#c3d{display:block;width:100%;height:100%}
+.vp-hud{position:absolute;bottom:10px;left:12px;color:var(--text-dim);font-size:13px;pointer-events:none;background:rgba(10,10,16,.6);padding:4px 10px;border:1px solid var(--border)}
+.vp-tool{position:absolute;top:10px;left:12px;color:var(--red);font-size:17px;background:rgba(10,10,16,.7);padding:4px 12px;border:2px solid var(--red);pointer-events:none}
+.right-panel{display:grid;grid-template-rows:1fr 1fr;background:var(--bg2);border-left:2px solid var(--border);overflow:hidden}
+.panel{overflow-y:auto;padding:10px}
+.panel+.panel{border-top:2px solid var(--border)}
+.panel h3{margin:0 0 8px;color:var(--purple);font-size:16px;letter-spacing:2px;border-bottom:1px solid var(--border);padding-bottom:5px}
+.explorer-item{padding:5px 8px;margin-bottom:3px;cursor:pointer;color:var(--text-dim);font-size:14px;border-left:2px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.explorer-item:hover{background:rgba(123,47,190,.15);color:var(--text)}
+.explorer-item.selected{color:var(--red);border-left-color:var(--red);background:rgba(255,34,34,.08)}
+.explorer-item .cls{color:var(--purple);font-size:12px;margin-right:6px}
+.prop-group{margin-bottom:8px}
+.prop-group label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:2px;letter-spacing:1px}
+.prop-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
+.prop-row input{width:100%;padding:3px 6px;background:#06060a;border:1px solid var(--border);color:var(--text);font-family:monospace;font-size:12px;outline:none}
+.prop-row input:focus{border-color:var(--red)}
+.prop-single input{width:100%;padding:4px 6px;background:#06060a;border:1px solid var(--border);color:var(--text);font-family:monospace;font-size:12px;outline:none}
+.prop-single input[type=color]{height:26px;padding:2px;cursor:pointer}
+.prop-check{display:flex;gap:8px;align-items:center;font-size:14px;margin:4px 0;cursor:pointer}
+.prop-check input{accent-color:var(--red)}
+.prop-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.chunk-tag{display:inline-block;font-size:11px;color:var(--warn);background:rgba(232,211,71,.1);border:1px solid var(--warn);padding:1px 6px;margin-top:4px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:10000;padding:20px}
+.modal.show{display:flex}
+.modal-card{background:var(--bg2);border:2px solid var(--red);max-width:700px;width:100%;max-height:85vh;display:flex;flex-direction:column}
+.modal-hd{padding:12px 18px;border-bottom:2px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.modal-hd h2{margin:0;color:var(--red);font-size:22px}
+.modal-hd button{background:none;border:none;color:var(--text-dim);font-size:26px;cursor:pointer}
+.modal-bd{padding:16px;overflow-y:auto;flex:1}
+.modal-ft{padding:10px 16px;border-top:2px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+textarea.luau{width:100%;height:340px;background:#050508;color:#d8d0e0;border:2px solid var(--border);font-family:monospace;font-size:12px;padding:10px;outline:none;resize:vertical}
+.test-frame{width:96vw;height:94vh;border:2px solid var(--red);background:#000;position:relative}
+.test-frame iframe{width:100%;height:100%;border:none;display:block}
+.test-frame .close{position:absolute;top:0;right:0;background:var(--red);color:#fff;border:none;padding:6px 14px;font:inherit;font-size:18px;cursor:pointer;z-index:10}
 </style>
-</head>
-<body>
-
+</head><body>
 <div class="app">
-  <header class="topbar">
-    <div class="logo">STUDIO<span>3D</span></div>
-    <input type="text" id="gameName" placeholder="Nome do jogo..." maxlength="40" />
-    <button class="btn" id="scriptBtn">📜 SCRIPT</button>
-    <button class="btn ok" id="testBtn">▶ TESTAR</button>
-    <button class="btn primary" id="publishBtn">🚀 PUBLICAR</button>
-    <button class="btn" id="newBtn">+ NOVO</button>
-    <button class="btn" id="backBtn">← LOBBY</button>
-  </header>
-
-  <div class="main">
-    <aside class="toolbox">
-      <h3>FERRAMENTAS</h3>
-      <div class="tool active" data-tool="select"><div class="icon">👆</div><div class="lbl">Selecionar</div></div>
-      <div class="tool" data-tool="erase"><div class="icon">🗑</div><div class="lbl">Apagar</div></div>
-      <div class="tool" data-tool="Part"><div class="swatch" style="background:#3a3a4a"></div><div class="lbl">Bloco</div></div>
-      <div class="tool" data-tool="Sphere"><div class="swatch" style="background:#c07bd8;border-radius:50%"></div><div class="lbl">Esfera</div></div>
-      <div class="tool" data-tool="SpawnPoint"><div class="swatch" style="background:#3fa14b;border-radius:50%"></div><div class="lbl">Spawn</div></div>
-      <div class="tool" data-tool="Coin"><div class="swatch" style="background:#ff9ed0;border-radius:50%"></div><div class="lbl">Custard</div></div>
-      <div class="tool" data-tool="Monster"><div class="swatch" style="background:#444"></div><div class="lbl">Monstro</div></div>
-      <div class="tool" data-tool="Goal"><div class="swatch" style="background:#e8d347;border-radius:50%"></div><div class="lbl">Meta</div></div>
-      <div class="tool" data-tool="KillBrick"><div class="swatch" style="background:#ff2222"></div><div class="lbl">KillBrick</div></div>
-
-      <div class="hint">🖱 <b>Left</b>: ação<br>🖱 <b>Right</b>: orbitar<br>🖱 <b>Scroll</b>: zoom<br>🖱 <b>Meio</b>: pan</div>
-    </aside>
-
-    <div class="viewport">
-      <div class="vp-tool" id="vpTool">👆 Selecionar</div>
-      <canvas id="c3d"></canvas>
-      <div class="vp-hud">Clique no chão para colocar · Clique no objeto para selecionar</div>
-    </div>
-
-    <aside class="right-panel">
-      <div class="panel">
-        <h3>EXPLORER</h3>
-        <div id="explorer"></div>
-      </div>
-      <div class="panel">
-        <h3>PROPERTIES</h3>
-        <div id="properties"><div class="empty">Selecione um objeto</div></div>
-      </div>
-    </aside>
-  </div>
+<header class="topbar">
+  <div class="logo">STUDIO<span>3D</span></div>
+  <input type="text" id="gname" placeholder="Nome do jogo..." maxlength="40">
+  <button class="btn" id="scriptBtn">📜 SCRIPT</button>
+  <button class="btn ok" id="testBtn">▶ TESTAR</button>
+  <button class="btn primary" id="pubBtn">🚀 PUBLICAR</button>
+  <button class="btn" id="newBtn">+ NOVO</button>
+  <button class="btn" onclick="location.href='index.html'">← LOBBY</button>
+</header>
+<div class="main">
+<aside class="toolbox">
+  <h3>FERRAMENTAS</h3>
+  <div class="tool active" data-tool="select"><div class="lbl">👆 Selecionar</div></div>
+  <div class="tool" data-tool="erase"><div class="lbl">🗑 Apagar</div></div>
+  <div class="tool" data-tool="Part"><div class="swatch" style="background:#4a4a5a"></div><div class="lbl">Bloco</div></div>
+  <div class="tool" data-tool="Sphere"><div class="swatch" style="background:#c07bd8;border-radius:50%"></div><div class="lbl">Esfera</div></div>
+  <div class="tool" data-tool="SpawnPoint"><div class="swatch" style="background:#3fa14b;border-radius:50%"></div><div class="lbl">Spawn</div></div>
+  <div class="tool" data-tool="Coin"><div class="swatch" style="background:#ff9ed0;border-radius:50%"></div><div class="lbl">Custard</div></div>
+  <div class="tool" data-tool="Monster"><div class="swatch" style="background:#444"></div><div class="lbl">Monstro</div></div>
+  <div class="tool" data-tool="Goal"><div class="swatch" style="background:#e8d347;border-radius:50%"></div><div class="lbl">Meta</div></div>
+  <div class="tool" data-tool="KillBrick"><div class="swatch" style="background:#ff2222"></div><div class="lbl">KillBrick</div></div>
+  <div class="hint">🖱 Left: ação · Right: orbitar · Scroll: zoom · V: câmera 1ª/3ª</div>
+</aside>
+<div class="viewport">
+  <div class="vp-tool" id="vpTool">👆 Selecionar</div>
+  <canvas id="c3d"></canvas>
+  <div class="vp-hud" id="vpHud">— · chunks: —</div>
+</div>
+<aside class="right-panel">
+  <div class="panel"><h3>EXPLORER</h3><div id="explorer"></div></div>
+  <div class="panel"><h3>PROPERTIES</h3><div id="props"><div style="color:var(--text-dim);font-style:italic;text-align:center;padding:16px;font-size:14px">Selecione um objeto</div></div></div>
+</aside>
+</div>
 </div>
 
-<!-- SCRIPT MODAL -->
 <div class="modal" id="scriptModal">
   <div class="modal-card">
-    <div class="modal-hd">
-      <h2>SCRIPT V-01</h2>
-      <button id="scriptClose">✕</button>
-    </div>
+    <div class="modal-hd"><h2>SCRIPT V-01</h2><button onclick="document.getElementById('scriptModal').classList.remove('show')">✕</button></div>
     <div class="modal-bd">
-      <textarea class="luau" id="scriptEditor" spellcheck="false" placeholder="// OPCIONAL — script de comportamento
-// Você pode criar objetos extras ou lógica customizada:
-
-var coin = Instance.new(&quot;Coin&quot;);
-coin.Position = Vector3.new(15, 1, 15);
-coin.Parent = game.Workspace;
-
-print('Jogo iniciado!');"></textarea>
-      <div class="api-help"><b>API V-01 (3D)</b>
-<b>Instance.new</b>("Part" | "Sphere" | "SpawnPoint" | "Coin" | "Monster" | "Goal" | "KillBrick")
-<b>Vector3.new</b>(x, y, z)     <b>Color3.fromRGB</b>(r, g, b)
-obj.Position = Vector3.new(x,y,z)
-obj.Size = Vector3.new(x,y,z)
-obj.Color = "#ff2222"
-obj.Speed = 2.5              <i>// monstro</i>
-obj.Parent = game.Workspace
-game.Players.LocalPlayer.Kill()
-<b>print</b>(...)</div>
+      <textarea class="luau" id="scriptEditor" placeholder="// OPCIONAL
+var coin = Instance.new('Coin');
+coin.Position = Vector3.new(10, 1, 10);
+coin.Parent = game.Workspace;"></textarea>
     </div>
     <div class="modal-ft">
-      <button class="btn" id="scriptCancel">CANCELAR</button>
-      <button class="btn primary" id="scriptSave">SALVAR SCRIPT</button>
+      <button class="btn" onclick="document.getElementById('scriptModal').classList.remove('show')">CANCELAR</button>
+      <button class="btn primary" id="scriptSave">SALVAR</button>
     </div>
   </div>
 </div>
-
-<!-- TEST MODAL -->
 <div class="modal" id="testModal">
-  <div class="test-frame">
-    <button class="close" id="testClose">FECHAR ✕</button>
-    <iframe id="testFrame" src="about:blank"></iframe>
-  </div>
+  <div class="test-frame"><button class="close" id="testClose">FECHAR ✕</button><iframe id="testFrame" src="about:blank"></iframe></div>
 </div>
 
-<div class="toast" id="toast"></div>
-
 <script src="core.js"></script>
+<script src="shared.js"></script>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
-const Core = window.CORE;
-const user = Core.getCurrentUser();
-if (!user) { location.href = 'index.html'; }
+if (!CORE.getCurrentUser()) location.href = 'index.html';
 
-/* =========================================================
-   Toast
-========================================================= */
-const toastEl = document.getElementById('toast');
-let toastTimer = null;
-function toast(msg, ok) {
-  toastEl.textContent = msg;
-  toastEl.classList.toggle('ok', !!ok);
-  toastEl.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
-}
-
-/* =========================================================
-   Three.js setup
-========================================================= */
 const canvas = document.getElementById('c3d');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -230,7 +129,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x050508);
-scene.fog = new THREE.Fog(0x050508, 40, 120);
+scene.fog = new THREE.Fog(0x050508, 50, 150);
 
 const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 500);
 camera.position.set(20, 20, 20);
@@ -238,114 +137,101 @@ camera.position.set(20, 20, 20);
 const controls = new OrbitControls(camera, canvas);
 controls.mouseButtons = { LEFT: null, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.ROTATE };
 controls.enableDamping = true;
-controls.dampingFactor = 0.08;
 controls.maxDistance = 100;
-controls.minDistance = 2;
 controls.target.set(0, 0, 0);
 
-// Lights
 scene.add(new THREE.AmbientLight(0x6a6a8a, 0.7));
 const sun = new THREE.DirectionalLight(0xffffff, 1.2);
 sun.position.set(25, 40, 20);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.camera.left = -50; sun.shadow.camera.right = 50;
-sun.shadow.camera.top = 50; sun.shadow.camera.bottom = -50;
+sun.shadow.camera.left = -60; sun.shadow.camera.right = 60;
+sun.shadow.camera.top = 60; sun.shadow.camera.bottom = -60;
 scene.add(sun);
 scene.add(new THREE.HemisphereLight(0x7b2fbe, 0x0a0a10, 0.3));
 
-// Grid
 const grid = new THREE.GridHelper(100, 100, 0x7b2fbe, 0x1a1a26);
-grid.material.opacity = 0.6;
-grid.material.transparent = true;
+grid.material.opacity = 0.6; grid.material.transparent = true;
 scene.add(grid);
 
-// Selection helper
 const selHelper = new THREE.BoxHelper(new THREE.Object3D(), 0xff2222);
 selHelper.visible = false;
 scene.add(selHelper);
 
-/* =========================================================
-   State
-========================================================= */
-let objects = [];           // Array of object data
-const meshMap = new Map();  // id → THREE.Object3D
+let objects = [];
+const meshMap = new Map();
 let selected = null;
 let currentTool = 'select';
 let idCounter = 0;
 let currentGameId = null;
 let scriptContent = '';
+let firstPerson = false;
 
-/* =========================================================
-   Mesh Factory
-========================================================= */
-function buildMonsterMesh(data) {
-  const group = new THREE.Group();
-  const size = data.size;
-  const color = data.color || '#444';
-  const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.85 });
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(size.x * 0.4, size.x * 0.5, size.y * 0.6, 16), bodyMat);
-  body.position.y = size.y * 0.3;
-  group.add(body);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(size.x * 0.45, 20, 20), bodyMat);
-  head.position.y = size.y * 0.75;
-  group.add(head);
-  const eyeMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 2 });
-  const eyeL = new THREE.Mesh(new THREE.SphereGeometry(size.x * 0.08, 10, 10), eyeMat);
-  eyeL.position.set(-size.x * 0.15, size.y * 0.78, size.x * 0.35);
-  group.add(eyeL);
-  const eyeR = eyeL.clone();
-  eyeR.position.x = size.x * 0.15;
-  group.add(eyeR);
-  group.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-  return group;
+/* ========== CHUNK SYSTEM ========== */
+const CHUNK_SIZE = CORE.CHUNK_SIZE;
+function chunkKeyObj(o) { return CORE.chunkKey(o.position.x, o.position.y, o.position.z); }
+function updateChunkHUD() {
+  const groups = CORE.groupByChunk(objects);
+  const n = Object.keys(groups).length;
+  document.getElementById('vpHud').textContent = `${objects.length} obj · ${n} chunks (16³)`;
+}
+// Reagrupa meshes por chunk para frustum culling otimizado
+function rebuildChunkGroups() {
+  // Remove antigos grupos de chunk
+  for (const child of [...scene.children]) {
+    if (child.userData.isChunkGroup) scene.remove(child);
+  }
+  const groups = CORE.groupByChunk(objects);
+  for (const key in groups) {
+    const chunkGroup = new THREE.Group();
+    chunkGroup.userData.isChunkGroup = true;
+    chunkGroup.userData.chunkKey = key;
+    for (const o of groups[key]) {
+      const m = meshMap.get(o.id);
+      if (m) {
+        const clone = m.clone();
+        clone.matrixAutoUpdate = false;
+        clone.updateMatrix();
+        chunkGroup.add(clone);
+      }
+    }
+    // Frustum culling é automático no Three.js para cada mesh
+    scene.add(chunkGroup);
+  }
+  console.log('[Chunks]', Object.keys(groups).length, 'chunks, frustum culling ativo');
+  updateChunkHUD();
 }
 
+function buildMonsterMesh(data) {
+  const g = new THREE.Group();
+  const s = data.size;
+  const bodyMat = new THREE.MeshStandardMaterial({ color: data.color || '#444', roughness: 0.85 });
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(s.x*.4, s.x*.5, s.y*.6, 16), bodyMat);
+  body.position.y = s.y*.3; body.castShadow = true; g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(s.x*.45, 20, 20), bodyMat);
+  head.position.y = s.y*.75; head.castShadow = true; g.add(head);
+  const eyeMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 2 });
+  const eL = new THREE.Mesh(new THREE.SphereGeometry(s.x*.08, 10, 10), eyeMat);
+  eL.position.set(-s.x*.15, s.y*.78, s.x*.35); g.add(eL);
+  const eR = eL.clone(); eR.position.x = s.x*.15; g.add(eR);
+  return g;
+}
 function buildMesh(data) {
-  if (data.type === 'Monster') {
-    const g = buildMonsterMesh(data);
-    g.position.set(data.position.x, data.position.y, data.position.z);
-    return g;
-  }
+  if (data.type === 'Monster') { const g = buildMonsterMesh(data); g.position.set(data.position.x, data.position.y, data.position.z); return g; }
   let geom, mat;
   switch (data.type) {
-    case 'Sphere':
-      geom = new THREE.SphereGeometry(data.size.x / 2, 20, 20);
-      mat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.5 });
-      break;
-    case 'Coin':
-      geom = new THREE.SphereGeometry(data.size.x / 2, 20, 20);
-      mat = new THREE.MeshStandardMaterial({
-        color: data.color, roughness: 0.4,
-        emissive: new THREE.Color(data.color), emissiveIntensity: 0.6
-      });
-      break;
-    case 'SpawnPoint':
-      geom = new THREE.CylinderGeometry(data.size.x / 2, data.size.x / 2, data.size.y, 24);
-      mat = new THREE.MeshStandardMaterial({ color: data.color, transparent: true, opacity: 0.55 });
-      break;
-    case 'Goal':
-      geom = new THREE.TorusGeometry(data.size.x / 2, data.size.x * 0.15, 12, 32);
-      mat = new THREE.MeshStandardMaterial({
-        color: data.color, emissive: new THREE.Color(data.color),
-        emissiveIntensity: 0.9, metalness: 0.6, roughness: 0.3
-      });
-      break;
-    case 'KillBrick':
-      geom = new THREE.BoxGeometry(data.size.x, data.size.y, data.size.z);
-      mat = new THREE.MeshStandardMaterial({
-        color: data.color || '#ff2222',
-        emissive: new THREE.Color(0xff0000), emissiveIntensity: 0.4
-      });
-      break;
-    default: // Part
-      geom = new THREE.BoxGeometry(data.size.x, data.size.y, data.size.z);
-      mat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.7 });
+    case 'Sphere': geom = new THREE.SphereGeometry(data.size.x/2, 20, 20); mat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.5 }); break;
+    case 'Coin': geom = new THREE.SphereGeometry(data.size.x/2, 20, 20); mat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.4, emissive: new THREE.Color(data.color), emissiveIntensity: 0.6 }); break;
+    case 'SpawnPoint': geom = new THREE.CylinderGeometry(data.size.x/2, data.size.x/2, data.size.y, 24); mat = new THREE.MeshStandardMaterial({ color: data.color, transparent: true, opacity: 0.55 }); break;
+    case 'Goal': geom = new THREE.TorusGeometry(data.size.x/2, data.size.x*.15, 12, 32); mat = new THREE.MeshStandardMaterial({ color: data.color, emissive: new THREE.Color(data.color), emissiveIntensity: 0.9, metalness: 0.6 }); break;
+    case 'KillBrick': geom = new THREE.BoxGeometry(data.size.x, data.size.y, data.size.z); mat = new THREE.MeshStandardMaterial({ color: '#ff2222', emissive: new THREE.Color(0xff0000), emissiveIntensity: 0.4 }); break;
+    default: geom = new THREE.BoxGeometry(data.size.x, data.size.y, data.size.z); mat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.7 });
   }
   const mesh = new THREE.Mesh(geom, mat);
   mesh.position.set(data.position.x, data.position.y, data.position.z);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
+  mesh.castShadow = true; mesh.receiveShadow = true;
+  mesh.matrixAutoUpdate = false;
+  mesh.updateMatrix();
   return mesh;
 }
 
@@ -356,26 +242,18 @@ function addObject(data) {
   meshMap.set(data.id, mesh);
   scene.add(mesh);
   refreshExplorer();
+  updateChunkHUD();
   return mesh;
 }
-
 function removeObjectById(id) {
   const idx = objects.findIndex(o => o.id === id);
   if (idx < 0) return;
   objects.splice(idx, 1);
   const mesh = meshMap.get(id);
-  if (mesh) {
-    scene.remove(mesh);
-    meshMap.delete(id);
-  }
-  if (selected && selected.id === id) {
-    selected = null;
-    selHelper.visible = false;
-    renderProperties();
-  }
-  refreshExplorer();
+  if (mesh) { scene.remove(mesh); meshMap.delete(id); }
+  if (selected && selected.id === id) { selected = null; selHelper.visible = false; renderProps(); }
+  refreshExplorer(); updateChunkHUD();
 }
-
 function updateMeshForData(data) {
   const old = meshMap.get(data.id);
   if (old) { scene.remove(old); meshMap.delete(data.id); }
@@ -383,43 +261,31 @@ function updateMeshForData(data) {
   mesh.userData.objectId = data.id;
   meshMap.set(data.id, mesh);
   scene.add(mesh);
-  if (selected && selected.id === data.id) {
-    selHelper.setFromObject(mesh);
-    selHelper.visible = true;
-  }
+  if (selected && selected.id === data.id) { selHelper.setFromObject(mesh); selHelper.visible = true; }
+  updateChunkHUD();
 }
 
-/* =========================================================
-   Tools
-========================================================= */
-document.querySelectorAll('.tool').forEach(t => {
-  t.addEventListener('click', () => {
-    document.querySelectorAll('.tool').forEach(x => x.classList.remove('active'));
-    t.classList.add('active');
-    currentTool = t.dataset.tool;
-    const toolLabel = t.querySelector('.lbl').textContent;
-    document.getElementById('vpTool').textContent = toolLabel;
-  });
+/* ========== TOOLS ========== */
+document.querySelectorAll('.tool').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tool').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  currentTool = t.dataset.tool;
+  document.getElementById('vpTool').textContent = t.querySelector('.lbl').textContent;
 });
 
-/* =========================================================
-   Raycasting
-========================================================= */
+/* ========== RAYCAST ========== */
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-
-function updateMouse(e) {
+function updMouse(e) {
   const r = canvas.getBoundingClientRect();
   mouse.x = ((e.clientX - r.left) / r.width) * 2 - 1;
   mouse.y = -((e.clientY - r.top) / r.height) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
 }
-
-function pickObject(e) {
-  updateMouse(e);
-  const meshes = Array.from(meshMap.values());
-  const hits = raycaster.intersectObjects(meshes, true);
+function pickObj(e) {
+  updMouse(e);
+  const hits = raycaster.intersectObjects(Array.from(meshMap.values()), true);
   for (const hit of hits) {
     let obj = hit.object;
     while (obj && !obj.userData.objectId && obj.parent) obj = obj.parent;
@@ -427,321 +293,216 @@ function pickObject(e) {
   }
   return null;
 }
-
 function pickGround(e) {
-  updateMouse(e);
+  updMouse(e);
   const pt = new THREE.Vector3();
   return raycaster.ray.intersectPlane(groundPlane, pt) ? pt : null;
 }
 
-/* =========================================================
-   Click handling
-========================================================= */
-canvas.addEventListener('click', (e) => {
+canvas.addEventListener('click', e => {
   if (e.button !== 0) return;
   if (currentTool === 'select') {
-    const id = pickObject(e);
+    const id = pickObj(e);
     if (id) selectObject(id);
-    else { selected = null; selHelper.visible = false; renderProperties(); refreshExplorer(); }
+    else { selected = null; selHelper.visible = false; renderProps(); refreshExplorer(); }
   } else if (currentTool === 'erase') {
-    const id = pickObject(e);
-    if (id) {
-      removeObjectById(id);
-      toast('Objeto removido', true);
-    }
+    const id = pickObj(e);
+    if (id) { removeObjectById(id); toast('Removido', true); }
   } else {
     const pt = pickGround(e);
     if (!pt) return;
-    placeObjectAt(currentTool, pt.x, pt.z);
+    placeObject(currentTool, pt.x, pt.z);
   }
 });
 
-function placeObjectAt(type, x, z) {
+function placeObject(type, x, z) {
   let size, y, color, canCollide;
   switch (type) {
-    case 'Part':      size = { x: 4, y: 1, z: 4 };   y = size.y / 2; color = '#4a4a5a'; canCollide = true; break;
-    case 'Sphere':    size = { x: 2, y: 2, z: 2 };   y = size.y / 2; color = '#c07bd8'; canCollide = true; break;
-    case 'SpawnPoint':size = { x: 2, y: 0.2, z: 2 }; y = 0.1;        color = '#3fa14b'; canCollide = false; break;
-    case 'Coin':      size = { x: 1.2, y: 1.2, z: 1.2 }; y = 1;       color = '#ff9ed0'; canCollide = false; break;
-    case 'Monster':   size = { x: 2, y: 4, z: 2 };   y = size.y / 2; color = '#444444'; canCollide = false; break;
-    case 'Goal':      size = { x: 2, y: 2, z: 2 };   y = 2;          color = '#e8d347'; canCollide = false; break;
-    case 'KillBrick': size = { x: 4, y: 1, z: 4 };   y = size.y / 2; color = '#ff2222'; canCollide = true; break;
+    case 'Part': size={x:4,y:1,z:4}; y=size.y/2; color='#4a4a5a'; canCollide=true; break;
+    case 'Sphere': size={x:2,y:2,z:2}; y=size.y/2; color='#c07bd8'; canCollide=true; break;
+    case 'SpawnPoint': size={x:2,y:0.2,z:2}; y=0.1; color='#3fa14b'; canCollide=false; break;
+    case 'Coin': size={x:1.2,y:1.2,z:1.2}; y=1; color='#ff9ed0'; canCollide=false; break;
+    case 'Monster': size={x:2,y:4,z:2}; y=size.y/2; color='#444444'; canCollide=false; break;
+    case 'Goal': size={x:2,y:2,z:2}; y=2; color='#e8d347'; canCollide=false; break;
+    case 'KillBrick': size={x:4,y:1,z:4}; y=size.y/2; color='#ff2222'; canCollide=true; break;
     default: return;
   }
-  const data = {
-    id: type.toLowerCase() + '_' + (++idCounter) + '_' + Date.now(),
-    type,
-    position: { x: round2(x), y, z: round2(z) },
-    size, color, canCollide, speed: type === 'Monster' ? 2.5 : undefined
-  };
-  addObject(data);
-  toast(type + ' adicionado', true);
+  addObject({
+    id: type.toLowerCase()+'_'+(++idCounter)+'_'+Date.now(),
+    type, position:{x:Math.round(x*100)/100, y, z:Math.round(z*100)/100},
+    size, color, canCollide, speed: type==='Monster'?2.5:undefined
+  });
+  toast(type+' adicionado', true);
 }
 
-function round2(n) { return Math.round(n * 100) / 100; }
-
-/* =========================================================
-   Explorer
-========================================================= */
+/* ========== EXPLORER ========== */
 function refreshExplorer() {
   const el = document.getElementById('explorer');
-  if (objects.length === 0) {
-    el.innerHTML = '<div class="empty">Nenhum objeto. Clique no chão com uma ferramenta ativa.</div>';
-    return;
-  }
-  el.innerHTML = objects.map(o =>
-    `<div class="explorer-item ${selected && selected.id === o.id ? 'selected' : ''}" data-id="${o.id}">
-      <span class="cls">${o.type}</span>${o.id.slice(0, 20)}
-    </div>`
-  ).join('');
-  el.querySelectorAll('.explorer-item').forEach(item => {
-    item.addEventListener('click', () => selectObject(item.dataset.id));
-  });
+  if (!objects.length) { el.innerHTML = '<div style="color:var(--text-dim);font-style:italic;text-align:center;padding:16px;font-size:14px">Nenhum objeto.</div>'; return; }
+  el.innerHTML = objects.map(o => `<div class="explorer-item ${selected&&selected.id===o.id?'selected':''}" data-id="${o.id}"><span class="cls">${o.type}</span>${o.id.slice(0,18)}</div>`).join('');
+  el.querySelectorAll('.explorer-item').forEach(i => i.onclick = () => selectObject(i.dataset.id));
 }
-
 function selectObject(id) {
   selected = objects.find(o => o.id === id);
   if (!selected) return;
   const mesh = meshMap.get(id);
-  if (mesh) {
-    selHelper.setFromObject(mesh);
-    selHelper.visible = true;
-  }
-  refreshExplorer();
-  renderProperties();
+  if (mesh) { selHelper.setFromObject(mesh); selHelper.visible = true; }
+  refreshExplorer(); renderProps();
 }
 
-/* =========================================================
-   Properties
-========================================================= */
-function renderProperties() {
-  const el = document.getElementById('properties');
-  if (!selected) {
-    el.innerHTML = '<div class="empty">Selecione um objeto no Explorer ou no viewport</div>';
-    return;
-  }
+/* ========== PROPERTIES ========== */
+function renderProps() {
+  const el = document.getElementById('props');
+  if (!selected) { el.innerHTML = '<div style="color:var(--text-dim);font-style:italic;text-align:center;padding:16px;font-size:14px">Selecione um objeto</div>'; return; }
   const o = selected;
-  const hasSpeed = o.type === 'Monster';
-  const canMove = true;
+  const ck = chunkKeyObj(o);
   el.innerHTML = `
-    <div class="prop-group">
-      <label>NAME</label>
-      <div class="prop-single"><input type="text" id="pName" value="${escapeAttr(o.id)}" readonly style="opacity:.6"></div>
-    </div>
-    <div class="prop-group">
-      <label>POSITION (X / Y / Z)</label>
-      <div class="prop-row">
-        <input type="number" id="pX" step="0.5" value="${o.position.x.toFixed(2)}">
-        <input type="number" id="pY" step="0.5" value="${o.position.y.toFixed(2)}">
-        <input type="number" id="pZ" step="0.5" value="${o.position.z.toFixed(2)}">
-      </div>
-    </div>
-    <div class="prop-group">
-      <label>SIZE (X / Y / Z)</label>
-      <div class="prop-row">
-        <input type="number" id="pSX" step="0.5" min="0.1" value="${o.size.x.toFixed(2)}">
-        <input type="number" id="pSY" step="0.5" min="0.1" value="${o.size.y.toFixed(2)}">
-        <input type="number" id="pSZ" step="0.5" min="0.1" value="${o.size.z.toFixed(2)}">
-      </div>
-    </div>
-    <div class="prop-group">
-      <label>COLOR</label>
-      <div class="prop-single"><input type="color" id="pColor" value="${o.color}"></div>
-    </div>
-    ${hasSpeed ? `<div class="prop-group">
-      <label>SPEED</label>
-      <div class="prop-single"><input type="number" id="pSpeed" step="0.1" min="0" value="${(o.speed || 2).toFixed(1)}"></div>
-    </div>` : ''}
-    <div class="prop-group">
-      <label class="prop-check"><input type="checkbox" id="pCollide" ${o.canCollide ? 'checked' : ''}> CanCollide</label>
-    </div>
+    <div class="prop-group"><label>ID</label><div class="prop-single"><input value="${escapeHTML(o.id)}" readonly style="opacity:.5"></div></div>
+    <div class="prop-group"><label>POSIÇÃO</label><div class="prop-row">
+      <input type="number" id="pX" step="0.5" value="${o.position.x.toFixed(2)}">
+      <input type="number" id="pY" step="0.5" value="${o.position.y.toFixed(2)}">
+      <input type="number" id="pZ" step="0.5" value="${o.position.z.toFixed(2)}">
+    </div></div>
+    <div class="prop-group"><label>TAMANHO</label><div class="prop-row">
+      <input type="number" id="pSX" step="0.5" min="0.1" value="${o.size.x.toFixed(2)}">
+      <input type="number" id="pSY" step="0.5" min="0.1" value="${o.size.y.toFixed(2)}">
+      <input type="number" id="pSZ" step="0.5" min="0.1" value="${o.size.z.toFixed(2)}">
+    </div></div>
+    <div class="prop-group"><label>COR</label><div class="prop-single"><input type="color" id="pColor" value="${o.color}"></div></div>
+    ${o.type==='Monster'?`<div class="prop-group"><label>SPEED</label><div class="prop-single"><input type="number" id="pSpeed" step="0.1" min="0" value="${(o.speed||2).toFixed(1)}"></div></div>`:''}
+    <div class="prop-group"><label class="prop-check"><input type="checkbox" id="pCollide" ${o.canCollide?'checked':''}> CanCollide</label></div>
+    <span class="chunk-tag">📦 chunk ${ck}</span>
     <div class="prop-actions">
-      <button class="btn" id="pDelete">🗑 DELETAR</button>
+      <button class="btn" id="pDel">🗑 DELETAR</button>
       <button class="btn" id="pClone">📋 DUPLICAR</button>
     </div>
   `;
-
   const updPos = () => {
     o.position.x = parseFloat(document.getElementById('pX').value) || 0;
     o.position.y = parseFloat(document.getElementById('pY').value) || 0;
     o.position.z = parseFloat(document.getElementById('pZ').value) || 0;
-    const m = meshMap.get(o.id); if (m) { m.position.set(o.position.x, o.position.y, o.position.z); selHelper.setFromObject(m); }
+    const m = meshMap.get(o.id); if (m) { m.position.set(o.position.x, o.position.y, o.position.z); m.updateMatrix(); selHelper.setFromObject(m); }
+    updateChunkHUD();
   };
   const updSize = () => {
-    o.size.x = Math.max(0.1, parseFloat(document.getElementById('pSX').value) || 1);
-    o.size.y = Math.max(0.1, parseFloat(document.getElementById('pSY').value) || 1);
-    o.size.z = Math.max(0.1, parseFloat(document.getElementById('pSZ').value) || 1);
+    o.size.x = Math.max(0.1, parseFloat(document.getElementById('pSX').value)||1);
+    o.size.y = Math.max(0.1, parseFloat(document.getElementById('pSY').value)||1);
+    o.size.z = Math.max(0.1, parseFloat(document.getElementById('pSZ').value)||1);
     updateMeshForData(o);
   };
-  ['pX','pY','pZ'].forEach(id => document.getElementById(id).addEventListener('input', updPos));
-  ['pSX','pSY','pSZ'].forEach(id => document.getElementById(id).addEventListener('input', updSize));
-  document.getElementById('pColor').addEventListener('input', e => {
-    o.color = e.target.value; updateMeshForData(o);
-  });
-  const pSpeed = document.getElementById('pSpeed');
-  if (pSpeed) pSpeed.addEventListener('input', e => { o.speed = parseFloat(e.target.value) || 2; });
-  document.getElementById('pCollide').addEventListener('change', e => { o.canCollide = e.target.checked; });
-
-  document.getElementById('pDelete').addEventListener('click', () => {
-    removeObjectById(o.id);
-    toast('Objeto deletado', true);
-  });
-  document.getElementById('pClone').addEventListener('click', () => {
-    const clone = JSON.parse(JSON.stringify(o));
-    clone.id = clone.type.toLowerCase() + '_' + (++idCounter) + '_' + Date.now();
-    clone.position.x += 3;
-    addObject(clone);
-    toast('Duplicado', true);
-  });
+  ['pX','pY','pZ'].forEach(id => document.getElementById(id).oninput = updPos);
+  ['pSX','pSY','pSZ'].forEach(id => document.getElementById(id).oninput = updSize);
+  document.getElementById('pColor').oninput = e => { o.color = e.target.value; updateMeshForData(o); };
+  const pS = document.getElementById('pSpeed'); if (pS) pS.oninput = e => { o.speed = parseFloat(e.target.value)||2; };
+  document.getElementById('pCollide').onchange = e => { o.canCollide = e.target.checked; };
+  document.getElementById('pDel').onclick = () => { removeObjectById(o.id); toast('Deletado', true); };
+  document.getElementById('pClone').onclick = () => {
+    const c = JSON.parse(JSON.stringify(o));
+    c.id = c.type.toLowerCase()+'_'+(++idCounter)+'_'+Date.now();
+    c.position.x += 3;
+    addObject(c); toast('Duplicado', true);
+  };
 }
+function escapeHTML(s) { return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
-function escapeAttr(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-/* =========================================================
-   Starter scene
-========================================================= */
-function loadStarterScene() {
-  // Clear current
+/* ========== STARTER SCENE ========== */
+function loadStarter() {
   objects.forEach(o => { const m = meshMap.get(o.id); if (m) scene.remove(m); });
-  objects = [];
-  meshMap.clear();
-  selected = null;
-  selHelper.visible = false;
-  idCounter = 0;
-
-  addObject({
-    id: 'floor_1', type: 'Part',
-    position: { x: 0, y: -0.25, z: 0 }, size: { x: 40, y: 0.5, z: 40 },
-    color: '#2a2a3a', canCollide: true
-  });
-  addObject({
-    id: 'spawn_1', type: 'SpawnPoint',
-    position: { x: 0, y: 0.1, z: 0 }, size: { x: 2, y: 0.2, z: 2 },
-    color: '#3fa14b', canCollide: false
-  });
-  refreshExplorer();
-  renderProperties();
-  controls.target.set(0, 0, 0);
+  objects = []; meshMap.clear(); selected = null; selHelper.visible = false; idCounter = 0;
+  addObject({ id:'floor_1', type:'Part', position:{x:0,y:-0.25,z:0}, size:{x:40,y:0.5,z:40}, color:'#2a2a3a', canCollide:true });
+  addObject({ id:'spawn_1', type:'SpawnPoint', position:{x:0,y:0.1,z:0}, size:{x:2,y:0.2,z:2}, color:'#3fa14b', canCollide:false });
+  refreshExplorer(); renderProps(); updateChunkHUD();
 }
 
-/* =========================================================
-   Load existing game (?game=id)
-========================================================= */
+/* ========== LOAD EXISTING ========== */
 const params = new URLSearchParams(location.search);
 const loadId = params.get('game');
 if (loadId) {
-  const g = Core.getGame(loadId);
-  if (g && g.authorId === Core.getSession()) {
+  const g = CORE.getGame(loadId);
+  if (g && g.authorId === CORE.getSession()) {
     currentGameId = g.id;
-    document.getElementById('gameName').value = g.name;
+    document.getElementById('gname').value = g.name;
     scriptContent = g.script || '';
-    // Build scene from saved objects
-    (g.objects || []).forEach(o => {
-      // Ensure required fields
-      if (!o.canCollide && o.type === 'Part') o.canCollide = true;
-      addObject(o);
-    });
+    (g.objects || []).forEach(o => addObject(o));
     refreshExplorer();
-    toast('Jogo carregado: ' + g.name, true);
-  } else {
-    loadStarterScene();
-  }
-} else {
-  loadStarterScene();
-}
+    toast('Carregado: '+g.name, true);
+  } else loadStarter();
+} else loadStarter();
 
-/* =========================================================
-   Topbar actions
-========================================================= */
-document.getElementById('newBtn').addEventListener('click', () => {
-  if (!confirm('Criar novo jogo? O atual (não publicado) será perdido.')) return;
+/* ========== TOPBAR ========== */
+document.getElementById('newBtn').onclick = () => {
+  if (!confirm('Novo jogo? O atual será perdido.')) return;
   currentGameId = null;
-  document.getElementById('gameName').value = '';
+  document.getElementById('gname').value = '';
   scriptContent = '';
-  loadStarterScene();
-  toast('Novo jogo criado', true);
-});
-
-document.getElementById('backBtn').addEventListener('click', () => { location.href = 'index.html'; });
-
-/* Script modal */
-const scriptModal = document.getElementById('scriptModal');
-document.getElementById('scriptBtn').addEventListener('click', () => {
+  loadStarter();
+  toast('Novo jogo', true);
+};
+document.getElementById('scriptBtn').onclick = () => {
   document.getElementById('scriptEditor').value = scriptContent;
-  scriptModal.classList.add('show');
-});
-document.getElementById('scriptClose').addEventListener('click', () => scriptModal.classList.remove('show'));
-document.getElementById('scriptCancel').addEventListener('click', () => scriptModal.classList.remove('show'));
-document.getElementById('scriptSave').addEventListener('click', () => {
+  document.getElementById('scriptModal').classList.add('show');
+};
+document.getElementById('scriptSave').onclick = () => {
   scriptContent = document.getElementById('scriptEditor').value;
-  scriptModal.classList.remove('show');
+  document.getElementById('scriptModal').classList.remove('show');
   toast('Script salvo', true);
-});
-
-/* Test */
-document.getElementById('testBtn').addEventListener('click', () => {
-  const name = document.getElementById('gameName').value.trim() || 'Teste';
-  const testGame = {
-    id: 'test',
-    name,
-    objects: JSON.parse(JSON.stringify(objects)),
-    script: scriptContent
-  };
-  sessionStorage.setItem('cb_test_game', JSON.stringify(testGame));
+};
+document.getElementById('testBtn').onclick = () => {
+  const name = document.getElementById('gname').value.trim() || 'Teste';
+  sessionStorage.setItem('cb_test_game', JSON.stringify({ id:'test', name, objects: JSON.parse(JSON.stringify(objects)), script: scriptContent }));
   document.getElementById('testFrame').src = 'engine.html?test=1';
   document.getElementById('testModal').classList.add('show');
-});
-document.getElementById('testClose').addEventListener('click', () => {
+};
+document.getElementById('testClose').onclick = () => {
   document.getElementById('testFrame').src = 'about:blank';
   document.getElementById('testModal').classList.remove('show');
-});
-
-/* Publish */
-document.getElementById('publishBtn').addEventListener('click', () => {
-  const name = document.getElementById('gameName').value.trim();
-  if (!name) { toast('Digite um nome', false); document.getElementById('gameName').focus(); return; }
-  if (objects.length === 0) { toast('Coloque pelo menos 1 objeto', false); return; }
-  const hasSpawn = objects.some(o => o.type === 'SpawnPoint');
-  if (!hasSpawn) { toast('Adicione 1 SpawnPoint', false); return; }
+};
+document.getElementById('pubBtn').onclick = () => {
+  const name = document.getElementById('gname').value.trim();
+  if (!name) { toast('Digite um nome', false); return; }
+  if (!objects.some(o => o.type === 'SpawnPoint')) { toast('Adicione 1 SpawnPoint', false); return; }
   const hasGoal = objects.some(o => o.type === 'Goal');
   const hasCoin = objects.some(o => o.type === 'Coin');
   if (!hasGoal && !hasCoin) { toast('Adicione 1 Coin ou 1 Goal', false); return; }
-
-  const r = Core.publishGame({
-    id: currentGameId,
-    name,
-    objects: JSON.parse(JSON.stringify(objects)),
-    script: scriptContent
-  });
+  const r = CORE.publishGame({ id: currentGameId, name, objects: JSON.parse(JSON.stringify(objects)), script: scriptContent });
   if (!r.ok) { toast(r.error, false); return; }
   currentGameId = r.game.id;
-  toast('Publicado! Redirecionando...', true);
+  toast('Publicado!', true);
   setTimeout(() => location.href = 'index.html', 900);
+};
+
+/* ========== CAMERA TOGGLE 1ª/3ª ========== */
+window.addEventListener('keydown', e => {
+  if (e.key.toLowerCase() === 'v') {
+    firstPerson = !firstPerson;
+    if (firstPerson) {
+      camera.position.set(0, 3, 0);
+      controls.target.set(0, 3, -5);
+      toast('Câmera 1ª pessoa', true);
+    } else {
+      camera.position.set(20, 20, 20);
+      controls.target.set(0, 0, 0);
+      toast('Câmera 3ª pessoa', true);
+    }
+  }
 });
 
-/* =========================================================
-   Resize + loop
-========================================================= */
+/* ========== RESIZE + LOOP ========== */
 function resize() {
   const w = canvas.clientWidth, h = canvas.clientHeight;
-  if (w === 0 || h === 0) return;
+  if (!w || !h) return;
   renderer.setSize(w, h, false);
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
+  camera.aspect = w / h; camera.updateProjectionMatrix();
 }
 window.addEventListener('resize', resize);
 setTimeout(resize, 100);
-
-let selTimer = 0;
+let tick = 0;
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
-  if (selected && meshMap.get(selected.id) && selTimer++ % 4 === 0) {
-    selHelper.setFromObject(meshMap.get(selected.id));
-  }
+  if (selected && meshMap.get(selected.id) && (tick++ % 4) === 0) selHelper.setFromObject(meshMap.get(selected.id));
   renderer.render(scene, camera);
 }
 animate();
 </script>
-</body>
-</html>
+</body></html>
