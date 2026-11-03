@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>CustardBricks — Lobby</title>
+<title>CustardBricks 3D — Lobby</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
@@ -11,6 +11,7 @@
   :root {
     --bg: #0a0a10;
     --bg2: #12121c;
+    --bg3: #1a1a26;
     --red: #ff2222;
     --red-dark: #a01515;
     --purple: #7b2fbe;
@@ -18,56 +19,40 @@
     --text: #d8d0e0;
     --text-dim: #8a839a;
     --border: #2a2a3a;
-    --ok: #3fa14b;
     --warn: #e8d347;
+    --ok: #3fa14b;
   }
   * { box-sizing: border-box; }
   html, body {
-    margin: 0; padding: 0;
-    height: 100%;
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'VT323', monospace;
-    font-size: 20px;
-    overflow-x: hidden;
+    margin: 0; padding: 0; min-height: 100%;
+    background: var(--bg); color: var(--text);
+    font-family: 'VT323', monospace; font-size: 20px;
   }
 
-  /* Vinheta + Scanlines + Estática CRT */
+  /* Vinheta + Scanlines */
   body::before {
-    content: "";
-    position: fixed; inset: 0;
-    pointer-events: none;
-    background:
-      radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%);
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.88) 100%);
     z-index: 9000;
   }
   body::after {
-    content: "";
-    position: fixed; inset: 0;
-    pointer-events: none;
-    background:
-      repeating-linear-gradient(
-        to bottom,
-        rgba(255,255,255,0.03) 0px,
-        rgba(255,255,255,0.03) 1px,
-        transparent 1px,
-        transparent 3px
-      );
-    z-index: 9001;
-    mix-blend-mode: overlay;
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.03) 0px,
+      rgba(255,255,255,0.03) 1px,
+      transparent 1px, transparent 3px
+    );
+    z-index: 9001; mix-blend-mode: overlay;
     animation: flicker 0.15s infinite;
   }
-  @keyframes flicker {
-    0%   { opacity: 0.9; }
-    50%  { opacity: 1; }
-    100% { opacity: 0.85; }
-  }
+  @keyframes flicker { 0%{opacity:.9}50%{opacity:1}100%{opacity:.85} }
 
   a { color: var(--red); text-decoration: none; }
   a:hover { text-shadow: 0 0 6px var(--red); }
 
   .app {
-    max-width: 1100px;
+    max-width: 1150px;
     margin: 0 auto;
     padding: 24px 20px 60px;
     position: relative;
@@ -80,31 +65,35 @@
     align-items: center;
     border-bottom: 2px solid var(--border);
     padding-bottom: 12px;
-    margin-bottom: 22px;
+    margin-bottom: 26px;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
   }
   .logo {
-    font-size: 40px;
-    letter-spacing: 2px;
+    font-size: 42px;
+    letter-spacing: 3px;
     color: var(--red);
     text-shadow: 0 0 12px var(--red-dark), 0 0 24px var(--purple-dark);
+    line-height: 1;
   }
   .logo span { color: var(--purple); }
+  .logo small {
+    display: block; font-size: 16px;
+    color: var(--text-dim); letter-spacing: 2px;
+    margin-top: 2px;
+    text-shadow: none;
+  }
 
   .userbar {
-    display: flex;
-    gap: 16px;
-    align-items: center;
+    display: flex; gap: 14px; align-items: center;
     flex-wrap: wrap;
   }
   .custards {
     color: var(--warn);
     text-shadow: 0 0 8px rgba(232,211,71,0.5);
   }
-  .nick {
-    color: var(--text);
-  }
+  .nick { color: var(--text); }
+
   .btn {
     font-family: 'VT323', monospace;
     font-size: 20px;
@@ -130,44 +119,22 @@
     background: var(--red);
     box-shadow: 0 0 16px var(--red);
   }
-  .btn.small { font-size: 16px; padding: 4px 10px; }
+  .btn.ok {
+    background: #1a5f24;
+    border-color: var(--ok);
+    color: #fff;
+  }
+  .btn.ok:hover {
+    background: var(--ok);
+    box-shadow: 0 0 16px var(--ok);
+  }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  /* Tabs */
-  .tabs {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 22px;
-    border-bottom: 1px solid var(--border);
-    flex-wrap: wrap;
-  }
-  .tab {
-    padding: 8px 18px;
-    cursor: pointer;
-    background: transparent;
-    border: none;
-    border-bottom: 3px solid transparent;
-    color: var(--text-dim);
-    font-family: 'VT323', monospace;
-    font-size: 22px;
-    letter-spacing: 1px;
-  }
-  .tab.active {
-    color: var(--red);
-    border-bottom-color: var(--red);
-    text-shadow: 0 0 8px var(--red-dark);
-  }
-  .tab:hover { color: var(--text); }
-
-  .panel { display: none; }
-  .panel.active { display: block; animation: fadeIn 0.25s; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px);} to {opacity:1;transform:none;} }
-
-  /* Login */
+  /* Auth box */
   .auth-box {
-    max-width: 420px;
-    margin: 40px auto;
-    padding: 28px;
+    max-width: 440px;
+    margin: 50px auto;
+    padding: 30px;
     background: var(--bg2);
     border: 2px solid var(--border);
     box-shadow: 0 0 30px rgba(255,34,34,0.15), inset 0 0 40px rgba(123,47,190,0.08);
@@ -176,7 +143,7 @@
     color: var(--red);
     margin-top: 0;
     text-align: center;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
     font-size: 34px;
   }
   .field { margin-bottom: 14px; }
@@ -201,152 +168,197 @@
     box-shadow: 0 0 10px rgba(255,34,34,0.4);
   }
   .auth-msg {
-    text-align: center;
-    min-height: 22px;
-    color: var(--red);
-    font-size: 18px;
-    margin-top: 10px;
+    text-align: center; min-height: 22px;
+    color: var(--red); font-size: 18px; margin-top: 10px;
   }
   .auth-switch {
-    text-align: center;
-    margin-top: 12px;
-    font-size: 18px;
-    color: var(--text-dim);
+    text-align: center; margin-top: 12px;
+    font-size: 18px; color: var(--text-dim);
   }
 
-  /* Feed */
+  /* Profile */
   .profile-card {
     background: var(--bg2);
     border: 2px solid var(--border);
-    padding: 18px;
-    margin-bottom: 22px;
+    padding: 22px;
+    margin-bottom: 26px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 16px;
-    box-shadow: inset 0 0 30px rgba(123,47,190,0.08);
+    gap: 18px;
+    box-shadow: inset 0 0 30px rgba(123,47,190,0.1);
+    position: relative;
+    overflow: hidden;
   }
-  .profile-card .big { font-size: 28px; }
+  .profile-card::after {
+    content: "3D";
+    position: absolute;
+    right: -10px; bottom: -30px;
+    font-size: 160px;
+    color: rgba(123,47,190,0.07);
+    letter-spacing: -6px;
+    pointer-events: none;
+    font-weight: bold;
+  }
+  .profile-card .welcome {
+    font-size: 30px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .profile-card .welcome .nick-highlight {
+    color: var(--red);
+    text-shadow: 0 0 10px var(--red-dark);
+  }
   .profile-card .custards-big {
     color: var(--warn);
-    font-size: 32px;
+    font-size: 34px;
     text-shadow: 0 0 10px rgba(232,211,71,0.5);
+    margin-top: 6px;
+  }
+  .profile-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    z-index: 1;
+  }
+  .profile-actions .btn {
+    font-size: 22px;
+    padding: 10px 22px;
   }
 
+  /* Section title */
   .section-title {
     font-size: 26px;
     color: var(--purple);
     text-shadow: 0 0 8px var(--purple-dark);
     letter-spacing: 2px;
-    margin: 22px 0 14px;
+    margin: 26px 0 14px;
     border-left: 4px solid var(--red);
-    padding-left: 10px;
+    padding-left: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-title .count {
+    font-size: 16px;
+    color: var(--text-dim);
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 2px 10px;
+    border-radius: 2px;
   }
 
+  /* Games grid */
   .games-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
   }
   .game-card {
     background: var(--bg2);
     border: 2px solid var(--border);
-    padding: 16px;
+    padding: 18px;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 0.2s;
     position: relative;
     overflow: hidden;
   }
+  .game-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--purple), var(--red));
+    opacity: 0.6;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s;
+  }
+  .game-card:hover::before { transform: scaleX(1); }
   .game-card::after {
     content: "";
-    position: absolute; inset: 0;
+    position: absolute;
+    inset: 0;
     background: linear-gradient(120deg, transparent 40%, rgba(255,34,34,0.08) 100%);
     pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
   }
+  .game-card:hover::after { opacity: 1; }
   .game-card:hover {
     border-color: var(--red);
     transform: translateY(-3px);
-    box-shadow: 0 0 20px rgba(255,34,34,0.35);
+    box-shadow: 0 6px 24px rgba(255,34,34,0.3);
   }
   .game-card h3 {
-    margin: 0 0 6px;
+    margin: 0 0 8px;
     color: var(--red);
-    font-size: 24px;
+    font-size: 26px;
+    letter-spacing: 1px;
+    line-height: 1.1;
+    word-break: break-word;
   }
   .game-card .author {
     color: var(--text-dim);
-    font-size: 16px;
+    font-size: 17px;
   }
   .game-card .badge {
     display: inline-block;
     font-size: 14px;
-    padding: 1px 8px;
+    padding: 2px 10px;
     background: var(--purple-dark);
     color: #eee;
     margin-top: 10px;
     letter-spacing: 1px;
   }
+  .game-card .badge.official {
+    background: var(--red-dark);
+    color: #fff;
+  }
   .game-card .play {
-    margin-top: 12px;
+    margin-top: 14px;
     display: block;
     width: 100%;
     text-align: center;
-  }
-
-  /* Avatar */
-  .avatar-layout {
-    display: grid;
-    grid-template-columns: 260px 1fr;
-    gap: 22px;
-  }
-  @media (max-width: 720px) {
-    .avatar-layout { grid-template-columns: 1fr; }
-  }
-  .preview-box {
-    background: var(--bg2);
-    border: 2px solid var(--border);
-    padding: 16px;
-    text-align: center;
-  }
-  .preview-box canvas {
-    background: #050508;
-    border: 1px solid var(--border);
-    display: block;
-    margin: 0 auto 10px;
-    image-rendering: pixelated;
-  }
-
-  .shop-section {
-    margin-bottom: 18px;
-  }
-  .shop-section h3 {
-    color: var(--purple);
-    margin: 0 0 10px;
-    letter-spacing: 2px;
     font-size: 22px;
+    padding: 8px 0;
   }
-  .item-row {
-    display: grid;
-    grid-template-columns: 1fr auto auto;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    margin-bottom: 6px;
-  }
-  .item-row.owned { border-color: var(--purple-dark); }
-  .item-row.equipped { border-color: var(--red); box-shadow: 0 0 10px rgba(255,34,34,0.3); }
-  .item-row .swatch {
-    display: inline-block;
-    width: 22px; height: 22px;
-    border: 2px solid #000;
-    vertical-align: middle;
-    margin-right: 10px;
-  }
-  .item-row .price { color: var(--warn); font-size: 18px; }
 
+  /* Empty state */
+  .empty-games {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-dim);
+    font-size: 22px;
+    border: 2px dashed var(--border);
+    background: var(--bg2);
+  }
+  .empty-games .sub {
+    font-size: 16px;
+    margin-top: 8px;
+    color: var(--text-dim);
+    opacity: 0.7;
+  }
+
+  /* Footer */
+  .footer-links {
+    margin-top: 50px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 17px;
+    letter-spacing: 1px;
+  }
+  .footer-links a { margin: 0 12px; }
+  .footer-links .version {
+    display: block;
+    margin-top: 8px;
+    font-size: 14px;
+    color: #4a4a5a;
+  }
+
+  /* Toast */
   .toast {
     position: fixed;
     bottom: 30px; left: 50%;
@@ -354,32 +366,33 @@
     background: var(--bg2);
     border: 2px solid var(--red);
     color: var(--text);
-    padding: 10px 20px;
+    padding: 10px 22px;
     z-index: 9500;
     transition: transform 0.3s;
     box-shadow: 0 0 20px rgba(255,34,34,0.5);
+    max-width: 90vw;
+    text-align: center;
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
-
-  .footer-links {
-    margin-top: 40px;
-    text-align: center;
-    color: var(--text-dim);
-    font-size: 18px;
+  .toast.ok {
+    border-color: var(--ok);
+    box-shadow: 0 0 20px rgba(63,161,75,0.5);
   }
-  .footer-links a { margin: 0 10px; }
 </style>
 </head>
 <body>
 
 <div class="app">
   <header class="top">
-    <div class="logo">CUSTARD<span>BRICKS</span></div>
+    <div class="logo">
+      CUSTARD<span>BRICKS</span>
+      <small>— 3D PLATFORM —</small>
+    </div>
     <div class="userbar" id="userbar"></div>
   </header>
 
-  <!-- ================= LOGIN ================= -->
-  <section id="viewLogin">
+  <!-- ================= LOGIN / REGISTRO ================= -->
+  <section id="viewLogin" style="display:none;">
     <div class="auth-box">
       <h2 id="authTitle">ENTRAR</h2>
       <div class="field">
@@ -403,85 +416,55 @@
 
   <!-- ================= LOBBY ================= -->
   <section id="viewLobby" style="display:none;">
-    <div class="tabs">
-      <button class="tab active" data-tab="feed">SERVIDORES</button>
-      <button class="tab" data-tab="avatar">AVATAR</button>
-    </div>
-
-    <!-- Feed -->
-    <div class="panel active" id="tab-feed">
-      <div class="profile-card">
-        <div>
-          <div class="big">Bem-vindo, <span id="lobbyNick" style="color:var(--red);"></span></div>
-          <div style="color:var(--text-dim);font-size:18px;">Custards disponíveis:</div>
-          <div class="custards-big" id="lobbyCustards">0</div>
+    <div class="profile-card">
+      <div>
+        <div class="welcome">
+          Bem-vindo, <span class="nick-highlight" id="lobbyNick">—</span>
         </div>
-        <a href="studio.html" class="btn primary" style="padding:10px 20px;">▶ ABRIR STUDIO</a>
+        <div style="color:var(--text-dim);font-size:18px;">Custards disponíveis:</div>
+        <div class="custards-big" id="lobbyCustards">0</div>
       </div>
-
-      <div class="section-title">JOGOS DISPONÍVEIS</div>
-      <div class="games-grid" id="gamesGrid"></div>
-    </div>
-
-    <!-- Avatar -->
-    <div class="panel" id="tab-avatar">
-      <div class="avatar-layout">
-        <div class="preview-box">
-          <canvas id="avatarPreview" width="200" height="200"></canvas>
-          <div style="color:var(--text-dim);">PRÉVIA</div>
-        </div>
-
-        <div>
-          <div class="shop-section">
-            <h3>CORPO</h3>
-            <div id="shopBodies"></div>
-          </div>
-          <div class="shop-section">
-            <h3>ANTENA</h3>
-            <div id="shopAntennas"></div>
-          </div>
-          <button class="btn primary" id="saveAvatarBtn" style="width:100%;padding:10px;font-size:22px;margin-top:6px;">
-            💾 SALVAR VISUAL
-          </button>
-        </div>
+      <div class="profile-actions">
+        <button class="btn primary" id="openStudioBtn" style="padding:12px 24px;">
+          🛠 ABRIR STUDIO 3D
+        </button>
       </div>
     </div>
+
+    <div class="section-title">
+      JOGOS 3D DISPONÍVEIS
+      <span class="count" id="gamesCount">0</span>
+    </div>
+    <div class="games-grid" id="gamesGrid"></div>
   </section>
 
   <div class="footer-links">
-    <a href="studio.html">Studio</a> |
+    <a href="studio3d.html">Studio 3D</a> |
     <a href="#" id="logoutLink">Sair</a>
+    <span class="version">CustardBricks 3D v0.1 — open source</span>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script src="core.js"></script>
+<script src="core3d.js"></script>
 <script>
 (function () {
   'use strict';
-  const Core = window.CustardCore;
+  const Core = window.Custard3D;
 
   /* ---------- Toast ---------- */
   const toastEl = document.getElementById('toast');
   let toastTimer = null;
-  function toast(msg, isErr) {
+  function toast(msg, isOk) {
     toastEl.textContent = msg;
-    toastEl.style.borderColor = isErr ? '#ff2222' : '#3fa14b';
-    toastEl.style.boxShadow = isErr
-      ? '0 0 20px rgba(255,34,34,0.5)'
-      : '0 0 20px rgba(63,161,75,0.5)';
+    toastEl.classList.toggle('ok', !!isOk);
     toastEl.classList.add('show');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
   }
 
-  /* ---------- Estado local ---------- */
-  let authMode = 'login'; // login | register
-  let shopState = { bodies: [], antennas: [] };
-  let previewAvatar = null;
-
-  /* ---------- DOM refs ---------- */
+  /* ---------- DOM ---------- */
   const viewLogin = document.getElementById('viewLogin');
   const viewLobby = document.getElementById('viewLobby');
   const userbar = document.getElementById('userbar');
@@ -495,25 +478,22 @@
   const lobbyNick = document.getElementById('lobbyNick');
   const lobbyCustards = document.getElementById('lobbyCustards');
   const gamesGrid = document.getElementById('gamesGrid');
-  const shopBodiesEl = document.getElementById('shopBodies');
-  const shopAntennasEl = document.getElementById('shopAntennas');
-  const avatarPreview = document.getElementById('avatarPreview');
+  const gamesCount = document.getElementById('gamesCount');
   const logoutLink = document.getElementById('logoutLink');
+  const openStudioBtn = document.getElementById('openStudioBtn');
 
-  /* ---------- Render: barra do usuário ---------- */
+  /* ---------- Auth state ---------- */
+  let authMode = 'login';
+
   function renderUserbar() {
     const u = Core.getCurrentUser();
-    if (!u) {
-      userbar.innerHTML = '';
-      return;
-    }
+    if (!u) { userbar.innerHTML = ''; return; }
     userbar.innerHTML = `
       <div class="custards">💰 ${u.custards} Custards</div>
-      <div class="nick">👤 ${u.nick}</div>
+      <div class="nick">👤 ${escapeHTML(u.nick)}</div>
     `;
   }
 
-  /* ---------- Roteamento login/lobby ---------- */
   function route() {
     const u = Core.getCurrentUser();
     if (u) {
@@ -523,7 +503,6 @@
       lobbyCustards.textContent = u.custards;
       renderUserbar();
       renderGames();
-      initShop();
     } else {
       viewLogin.style.display = 'block';
       viewLobby.style.display = 'none';
@@ -532,7 +511,7 @@
     }
   }
 
-  /* ---------- Auth Form ---------- */
+  /* ---------- Auth form ---------- */
   function renderAuthForm() {
     authMsg.textContent = '';
     if (authMode === 'login') {
@@ -562,17 +541,16 @@
     if (authMode === 'login') {
       const r = Core.login(nick, pass);
       if (!r.ok) { authMsg.textContent = r.error; return; }
-      toast('Bem-vindo, ' + r.user.nick + '!');
+      toast('Bem-vindo, ' + r.user.nick + '!', true);
       route();
     } else {
       const r = Core.register(nick, pass);
       if (!r.ok) { authMsg.textContent = r.error; return; }
-      toast('Conta criada. +100 Custards de boas-vindas!');
+      toast('Conta criada. +500 Custards de boas-vindas!', true);
       route();
     }
   });
 
-  // Enter para submit
   [authNick, authPass].forEach(el => {
     el.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') authSubmit.click();
@@ -586,31 +564,40 @@
     toast('Você saiu.');
   });
 
-  /* ---------- Tabs ---------- */
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
-    });
+  openStudioBtn.addEventListener('click', () => {
+    window.location.href = 'studio3d.html';
   });
 
-  /* ---------- Feed de Jogos ---------- */
+  /* ---------- Games feed ---------- */
+  function escapeHTML(s) {
+    return String(s).replace(/[&<>"']/g, m => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[m]));
+  }
+
   function renderGames() {
     const games = Core.getGames();
     gamesGrid.innerHTML = '';
+    gamesCount.textContent = games.length;
+
     if (!games.length) {
-      gamesGrid.innerHTML = '<div style="color:var(--text-dim);">Nenhum jogo publicado ainda.</div>';
+      gamesGrid.innerHTML = `
+        <div class="empty-games" style="grid-column: 1/-1;">
+          Nenhum jogo publicado ainda.
+          <div class="sub">Abra o Studio 3D e crie o primeiro!</div>
+        </div>`;
       return;
     }
+
     games.forEach(g => {
       const card = document.createElement('div');
       card.className = 'game-card';
       card.innerHTML = `
         <h3>${escapeHTML(g.name)}</h3>
-        <div class="author">por ${escapeHTML(g.author)}</div>
-        <div class="badge">${g.official ? 'OFICIAL' : 'COMUNIDADE'}</div>
+        <div class="author">por ${escapeHTML(g.author || 'Anônimo')}</div>
+        <div class="badge ${g.official ? 'official' : ''}">
+          ${g.official ? 'OFICIAL' : 'COMUNIDADE'}
+        </div>
         <button class="btn primary play">▶ JOGAR</button>
       `;
       card.addEventListener('click', () => playGame(g.id));
@@ -619,229 +606,34 @@
   }
 
   function playGame(id) {
-    Core.selectGameForPlay(id);
-    window.location.href = 'engine.html';
+    const game = Core.getGameById(id);
+    if (!game) { toast('Jogo não encontrado.', false); return; }
+    sessionStorage.setItem('cb3d_selected_game', id);
+    window.location.href = 'engine3d.html';
   }
 
-  function escapeHTML(s) {
-    return String(s).replace(/[&<>"']/g, m => ({
-      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-    }[m]));
-  }
-
-  /* ---------- Loja / Avatar ---------- */
-  function initShop() {
-    const avatar = Core.getAvatar();
-    previewAvatar = { ...avatar };
-    shopState.bodies = Core.SKIN_SHOP.bodies.map(b => ({
-      ...b,
-      owned: avatar.ownedBodies.includes(b.id),
-      equipped: avatar.bodyColor === b.id
-    }));
-    shopState.antennas = Core.SKIN_SHOP.antennas.map(a => ({
-      ...a,
-      owned: avatar.ownedAntennas.includes(a.id),
-      equipped: avatar.antenna === a.id
-    }));
-    renderShop();
-    drawPreview();
-  }
-
-  function renderShop() {
-    shopBodiesEl.innerHTML = '';
-    shopState.bodies.forEach(item => {
-      const row = document.createElement('div');
-      row.className = 'item-row'
-        + (item.owned ? ' owned' : '')
-        + (item.equipped ? ' equipped' : '');
-      const priceLabel = item.owned ? '✓ possuído' : (item.price > 0 ? `💰 ${item.price}` : 'grátis');
-      row.innerHTML = `
-        <div>
-          <span class="swatch" style="background:${item.id}"></span>
-          ${item.name}
-        </div>
-        <div class="price">${priceLabel}</div>
-        <button class="btn small">
-          ${item.equipped ? 'EQUIPADO' : (item.owned ? 'EQUIPAR' : 'COMPRAR')}
-        </button>
-      `;
-      row.querySelector('button').disabled = item.equipped;
-      row.querySelector('button').addEventListener('click', () => {
-        if (item.owned) {
-          previewAvatar.bodyColor = item.id;
-          shopState.bodies.forEach(b => b.equipped = (b.id === item.id));
-          renderShop();
-          drawPreview();
-        } else {
-          const r = Core.buyBody(item.id);
-          if (!r.ok) { toast(r.error, true); return; }
-          toast('Cor desbloqueada!');
-          // recarrega dados
-          shopState.bodies = Core.SKIN_SHOP.bodies.map(b => {
-            const av = Core.getAvatar();
-            return { ...b, owned: av.ownedBodies.includes(b.id), equipped: av.bodyColor === b.id };
-          });
-          previewAvatar.bodyColor = item.id;
-          renderShop();
-          drawPreview();
-          renderUserbar();
-          lobbyCustards.textContent = Core.getCustards();
-        }
-      });
-      shopBodiesEl.appendChild(row);
-    });
-
-    shopAntennasEl.innerHTML = '';
-    shopState.antennas.forEach(item => {
-      const row = document.createElement('div');
-      row.className = 'item-row'
-        + (item.owned ? ' owned' : '')
-        + (item.equipped ? ' equipped' : '');
-      const priceLabel = item.owned ? '✓ possuído' : (item.price > 0 ? `💰 ${item.price}` : 'grátis');
-      const icon = item.id === 'triangle' ? '▲' : item.id === 'circle' ? '●' : '│';
-      row.innerHTML = `
-        <div><span style="color:var(--red);font-size:22px;">${icon}</span> ${item.name}</div>
-        <div class="price">${priceLabel}</div>
-        <button class="btn small">
-          ${item.equipped ? 'EQUIPADO' : (item.owned ? 'EQUIPAR' : 'COMPRAR')}
-        </button>
-      `;
-      row.querySelector('button').disabled = item.equipped;
-      row.querySelector('button').addEventListener('click', () => {
-        if (item.owned) {
-          previewAvatar.antenna = item.id;
-          shopState.antennas.forEach(a => a.equipped = (a.id === item.id));
-          renderShop();
-          drawPreview();
-        } else {
-          const r = Core.buyAntenna(item.id);
-          if (!r.ok) { toast(r.error, true); return; }
-          toast('Antena desbloqueada!');
-          shopState.antennas = Core.SKIN_SHOP.antennas.map(a => {
-            const av = Core.getAvatar();
-            return { ...a, owned: av.ownedAntennas.includes(a.id), equipped: av.antenna === a.id };
-          });
-          previewAvatar.antenna = item.id;
-          renderShop();
-          drawPreview();
-          renderUserbar();
-          lobbyCustards.textContent = Core.getCustards();
-        }
-      });
-      shopAntennasEl.appendChild(row);
-    });
-  }
-
-  /* ---------- Preview do Avatar ---------- */
-  function drawPreview() {
-    if (!previewAvatar) return;
-    const ctx = avatarPreview.getContext('2d');
-    const W = avatarPreview.width, H = avatarPreview.height;
-    ctx.clearRect(0, 0, W, H);
-
-    // fundo sutil
-    ctx.fillStyle = '#050508';
-    ctx.fillRect(0, 0, W, H);
-    // grade
-    ctx.strokeStyle = 'rgba(123,47,190,0.15)';
-    ctx.lineWidth = 1;
-    for (let i = 0; i <= W; i += 20) {
-      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke();
-    }
-
-    const cx = W / 2, cy = H / 2 + 10;
-    const bodyW = 80, bodyH = 90;
-    const color = previewAvatar.bodyColor;
-
-    // corpo
-    ctx.fillStyle = color;
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 3;
-    roundRect(ctx, cx - bodyW/2, cy - bodyH/2, bodyW, bodyH, 22);
-    ctx.fill();
-    ctx.stroke();
-
-    // rosto (parte clara do teletubby)
-    ctx.fillStyle = 'rgba(255,255,255,0.85)';
-    ctx.beginPath();
-    ctx.ellipse(cx, cy + 8, 26, 24, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // olhos
-    ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.arc(cx - 10, cy + 4, 4, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx + 10, cy + 4, 4, 0, Math.PI*2); ctx.fill();
-
-    // boca (sorriso sombrio)
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(cx, cy + 12, 10, 0.15 * Math.PI, 0.85 * Math.PI);
-    ctx.stroke();
-
-    // orelhas (topo)
-    ctx.fillStyle = color;
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(cx - 22, cy - bodyH/2 + 6, 8, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.arc(cx + 22, cy - bodyH/2 + 6, 8, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-
-    // antena
-    ctx.strokeStyle = '#ddd';
-    ctx.fillStyle = '#ddd';
-    ctx.lineWidth = 3;
-    const antY = cy - bodyH/2 - 4;
-    if (previewAvatar.antenna === 'triangle') {
-      ctx.beginPath();
-      ctx.moveTo(cx, antY - 26);
-      ctx.lineTo(cx - 14, antY);
-      ctx.lineTo(cx + 14, antY);
-      ctx.closePath();
-      ctx.fill(); ctx.stroke();
-    } else if (previewAvatar.antenna === 'circle') {
-      ctx.beginPath();
-      ctx.arc(cx, antY - 14, 12, 0, Math.PI*2);
-      ctx.fill(); ctx.stroke();
-    } else {
-      ctx.beginPath();
-      ctx.moveTo(cx, antY);
-      ctx.lineTo(cx, antY - 28);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(cx, antY - 30, 3, 0, Math.PI*2);
-      ctx.fill();
-    }
-  }
-
-  function roundRect(ctx, x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-  }
-
-  document.getElementById('saveAvatarBtn').addEventListener('click', () => {
-    const avatar = Core.getAvatar();
-    avatar.bodyColor = previewAvatar.bodyColor;
-    avatar.antenna = previewAvatar.antenna;
-    Core.saveAvatar(avatar);
-    toast('Visual salvo!');
-  });
-
-  /* ---------- Init ---------- */
-  route();
-  // se logado, atualiza custards caso outro módulo tenha mexido
+  /* ---------- Sync ---------- */
+  // Ao voltar do engine (que adiciona custards), atualiza
   window.addEventListener('focus', () => {
-    if (Core.getCurrentUser()) {
-      lobbyCustards.textContent = Core.getCustards();
+    const u = Core.getCurrentUser();
+    if (u) {
+      lobbyCustards.textContent = u.custards;
       renderUserbar();
       renderGames();
     }
   });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      const u = Core.getCurrentUser();
+      if (u) {
+        lobbyCustards.textContent = u.custards;
+        renderUserbar();
+      }
+    }
+  });
+
+  /* ---------- Boot ---------- */
+  route();
 })();
 </script>
 </body>
