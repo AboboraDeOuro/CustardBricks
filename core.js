@@ -1,12 +1,23 @@
-/* ============================================================
-   CustardBricks core.js — v5
-   Adições: category, models[] por jogo, IndexedDB ModelStore
-   ============================================================ */
 const CORE = (function () {
   'use strict';
   const DB_KEY = 'custardbricks_db_v4';
   const SESSION_KEY = 'custardbricks_session';
   const CHUNK_SIZE = 16;
+
+  // === MIGRAÇÃO DE BANCO DE DADOS ===
+  function migrateDB() {
+    if (localStorage.getItem(DB_KEY)) return;
+    const oldKeys = ['custardbricks_db_v3', 'custardbricks_db_v2', 'custardbricks_db'];
+    for (const oldKey of oldKeys) {
+      const data = localStorage.getItem(oldKey);
+      if (data) {
+        localStorage.setItem(DB_KEY, data);
+        console.log('Banco de dados migrado de', oldKey);
+        break;
+      }
+    }
+  }
+  migrateDB();
 
   const MARKET_ITEMS = [
     { id:'body_purple', category:'body', slot:'body', name:'Roxo Sombrio', price:0, color:'#7b2fbe', icon:'swatch', rarity:'common' },
@@ -176,21 +187,16 @@ const CORE = (function () {
     if (data.id) {
       const e = db.games.find(g => g.id === data.id && g.authorId === k);
       if (e) {
-        e.name = data.name.trim();
-        e.description = (data.description||'').trim();
+        e.name = data.name.trim(); e.description = (data.description||'').trim();
         e.category = data.category || e.category || 'Adventure';
-        e.objects = data.objects || [];
-        e.script = data.script || '';
-        e.models = data.models || e.models || [];
-        e.updatedAt = Date.now();
-        saveDB(db);
-        return { ok:true, game:e, updated:true };
+        e.objects = data.objects || []; e.script = data.script || '';
+        e.models = data.models || e.models || []; e.updatedAt = Date.now();
+        saveDB(db); return { ok:true, game:e, updated:true };
       }
     }
     const game = {
       id:'game_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),
-      name:data.name.trim(),
-      description:(data.description||'').trim(),
+      name:data.name.trim(), description:(data.description||'').trim(),
       category:data.category || 'Adventure',
       author:u.username, authorId:k,
       objects:data.objects||[], script:data.script||'', models:data.models||[],
@@ -210,8 +216,7 @@ const CORE = (function () {
     if (idx < 0) return { ok:false, error:'Sem permissão' };
     db.games.splice(idx, 1);
     const u = db.users[k]; if (u && u.games) u.games = u.games.filter(x => x !== id);
-    saveDB(db);
-    return { ok:true };
+    saveDB(db); return { ok:true };
   }
   function incrementPlays(id) {
     const db = initDB(); const g = db.games.find(x => x.id === id);
@@ -224,7 +229,6 @@ const CORE = (function () {
   const setSelectedGame = (id) => sessionStorage.setItem('cb_selected_game', id);
   const getSelectedGame = () => { const id = sessionStorage.getItem('cb_selected_game'); return id ? getGame(id) : null; };
 
-  /* ---------- CHUNKS ---------- */
   const chunkKey = (x,y,z) => `${Math.floor(x/CHUNK_SIZE)},${Math.floor(y/CHUNK_SIZE)},${Math.floor(z/CHUNK_SIZE)}`;
   function groupByChunk(objects) {
     const out = {};
@@ -235,7 +239,6 @@ const CORE = (function () {
     return out;
   }
 
-  /* ---------- NET ---------- */
   const Net = (function () {
     let channel=null, ws=null, handlers=[], mode='broadcast';
     function connect(id) {
@@ -259,13 +262,8 @@ const CORE = (function () {
     return { connect, send, onMessage, close, setMode };
   })();
 
-  /* ============================================================
-     MODEL STORE — IndexedDB para modelos 3D enviados por upload
-     ============================================================ */
   const ModelStore = (function () {
-    const DB_NAME = 'custardbricks_models';
-    const STORE = 'models';
-    let _db = null;
+    const DB_NAME = 'custardbricks_models'; const STORE = 'models'; let _db = null;
     function openDB() {
       return new Promise((resolve, reject) => {
         if (_db) return resolve(_db);
@@ -281,41 +279,30 @@ const CORE = (function () {
     async function save(id, blob, name, mimeType) {
       const db = await openDB();
       return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE, 'readwrite');
-        const store = tx.objectStore(STORE);
+        const tx = db.transaction(STORE, 'readwrite'); const store = tx.objectStore(STORE);
         const req = store.put({ id, blob, name, mimeType, size: blob.size, createdAt: Date.now() });
-        req.onsuccess = () => resolve({ id });
-        req.onerror = () => reject(req.error);
+        req.onsuccess = () => resolve({ id }); req.onerror = () => reject(req.error);
       });
     }
     async function get(id) {
       const db = await openDB();
       return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE, 'readonly');
-        const store = tx.objectStore(STORE);
-        const req = store.get(id);
-        req.onsuccess = () => resolve(req.result || null);
-        req.onerror = () => reject(req.error);
+        const tx = db.transaction(STORE, 'readonly'); const store = tx.objectStore(STORE);
+        const req = store.get(id); req.onsuccess = () => resolve(req.result || null); req.onerror = () => reject(req.error);
       });
     }
     async function list() {
       const db = await openDB();
       return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE, 'readonly');
-        const store = tx.objectStore(STORE);
-        const req = store.getAll();
-        req.onsuccess = () => resolve(req.result || []);
-        req.onerror = () => reject(req.error);
+        const tx = db.transaction(STORE, 'readonly'); const store = tx.objectStore(STORE);
+        const req = store.getAll(); req.onsuccess = () => resolve(req.result || []); req.onerror = () => reject(req.error);
       });
     }
     async function remove(id) {
       const db = await openDB();
       return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE, 'readwrite');
-        const store = tx.objectStore(STORE);
-        const req = store.delete(id);
-        req.onsuccess = () => resolve();
-        req.onerror = () => reject(req.error);
+        const tx = db.transaction(STORE, 'readwrite'); const store = tx.objectStore(STORE);
+        const req = store.delete(id); req.onsuccess = () => resolve(); req.onerror = () => reject(req.error);
       });
     }
     async function getBlobURL(id) {
@@ -326,7 +313,6 @@ const CORE = (function () {
     return { save, get, list, remove, getBlobURL };
   })();
 
-  /* ---------- Seed ---------- */
   function getOfficialGame3D() {
     return {
       id:'official_01', name:'Slendytubby: O Início (3D)',
