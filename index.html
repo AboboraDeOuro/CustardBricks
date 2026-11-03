@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>CustardBricks 3D — Lobby</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<title>CustardBricks — Home</title>
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -21,235 +19,237 @@
     --border: #2a2a3a;
     --warn: #e8d347;
     --ok: #3fa14b;
+    --gold: #e8b347;
   }
   * { box-sizing: border-box; }
   html, body {
     margin: 0; padding: 0; min-height: 100%;
     background: var(--bg); color: var(--text);
-    font-family: 'VT323', monospace; font-size: 20px;
+    font-family: 'VT323', monospace; font-size: 18px;
   }
-
-  /* Vinheta + Scanlines */
   body::before {
     content: ""; position: fixed; inset: 0; pointer-events: none;
-    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.88) 100%);
-    z-index: 9000;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.8) 100%);
+    z-index: 9990;
   }
   body::after {
     content: ""; position: fixed; inset: 0; pointer-events: none;
-    background: repeating-linear-gradient(
-      to bottom,
-      rgba(255,255,255,0.03) 0px,
-      rgba(255,255,255,0.03) 1px,
-      transparent 1px, transparent 3px
-    );
-    z-index: 9001; mix-blend-mode: overlay;
+    background: repeating-linear-gradient(to bottom,
+      rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px,
+      transparent 1px, transparent 3px);
+    z-index: 9991; mix-blend-mode: overlay;
     animation: flicker 0.15s infinite;
   }
   @keyframes flicker { 0%{opacity:.9}50%{opacity:1}100%{opacity:.85} }
 
-  a { color: var(--red); text-decoration: none; }
-  a:hover { text-shadow: 0 0 6px var(--red); }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: 'VT323', monospace; cursor: pointer; }
+  input, textarea { font-family: 'VT323', monospace; }
 
-  .app {
-    max-width: 1150px;
-    margin: 0 auto;
-    padding: 24px 20px 60px;
-    position: relative;
-    z-index: 10;
-  }
-
-  header.top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  /* ==================== TOP NAV ==================== */
+  .topnav {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 20px;
+    background: rgba(10,10,16,0.95);
     border-bottom: 2px solid var(--border);
-    padding-bottom: 12px;
-    margin-bottom: 26px;
+    backdrop-filter: blur(8px);
     flex-wrap: wrap;
-    gap: 12px;
   }
   .logo {
-    font-size: 42px;
-    letter-spacing: 3px;
+    font-size: 26px; letter-spacing: 2px;
     color: var(--red);
-    text-shadow: 0 0 12px var(--red-dark), 0 0 24px var(--purple-dark);
-    line-height: 1;
+    text-shadow: 0 0 12px var(--red-dark), 0 0 20px var(--purple-dark);
+    margin-right: 16px;
+    white-space: nowrap;
+    cursor: pointer;
   }
   .logo span { color: var(--purple); }
-  .logo small {
-    display: block; font-size: 16px;
-    color: var(--text-dim); letter-spacing: 2px;
-    margin-top: 2px;
-    text-shadow: none;
-  }
-
-  .userbar {
-    display: flex; gap: 14px; align-items: center;
-    flex-wrap: wrap;
-  }
-  .custards {
-    color: var(--warn);
-    text-shadow: 0 0 8px rgba(232,211,71,0.5);
-  }
-  .nick { color: var(--text); }
-
-  .btn {
-    font-family: 'VT323', monospace;
-    font-size: 20px;
-    padding: 6px 14px;
-    background: var(--bg2);
-    color: var(--text);
-    border: 2px solid var(--border);
-    cursor: pointer;
+  .nav-links { display: flex; gap: 4px; flex: 1; flex-wrap: wrap; }
+  .nav-link {
+    padding: 8px 16px; font-size: 20px;
+    background: transparent; border: 2px solid transparent;
+    color: var(--text-dim); cursor: pointer;
     letter-spacing: 1px;
     transition: all 0.15s;
   }
-  .btn:hover {
-    border-color: var(--red);
-    color: var(--red);
-    box-shadow: 0 0 10px rgba(255,34,34,0.4);
+  .nav-link:hover { color: var(--text); border-color: var(--border); }
+  .nav-link.active {
+    color: var(--red); border-color: var(--red);
+    background: rgba(255,34,34,0.1);
+    text-shadow: 0 0 8px var(--red-dark);
   }
+  .user-area { display: flex; align-items: center; gap: 10px; }
+  .balance-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 12px;
+    background: rgba(232,179,71,0.1);
+    border: 2px solid var(--gold);
+    color: var(--gold);
+    font-size: 20px;
+    text-shadow: 0 0 6px rgba(232,179,71,0.5);
+  }
+  .user-chip {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 10px;
+    background: var(--bg3);
+    border: 2px solid var(--border);
+    font-size: 18px;
+  }
+  .user-chip .mini-avatar {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 2px solid var(--purple);
+    display: inline-block;
+  }
+  .btn {
+    padding: 6px 14px; font-size: 18px;
+    background: var(--bg3); color: var(--text);
+    border: 2px solid var(--border);
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+  .btn:hover { border-color: var(--red); color: var(--red); }
   .btn.primary {
-    background: var(--red-dark);
-    border-color: var(--red);
-    color: #fff;
+    background: var(--red-dark); border-color: var(--red); color: #fff;
   }
-  .btn.primary:hover {
-    background: var(--red);
-    box-shadow: 0 0 16px var(--red);
-  }
-  .btn.ok {
-    background: #1a5f24;
-    border-color: var(--ok);
-    color: #fff;
-  }
-  .btn.ok:hover {
-    background: var(--ok);
-    box-shadow: 0 0 16px var(--ok);
-  }
+  .btn.primary:hover { background: var(--red); box-shadow: 0 0 14px var(--red); }
+  .btn.ok { background: #1a5f24; border-color: var(--ok); color: #fff; }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  /* Auth box */
-  .auth-box {
-    max-width: 440px;
-    margin: 50px auto;
-    padding: 30px;
+  /* ==================== MAIN ==================== */
+  main {
+    max-width: 1400px; margin: 0 auto;
+    padding: 24px 20px 80px;
+    position: relative; z-index: 10;
+  }
+
+  /* ==================== AUTH SCREEN ==================== */
+  #authScreen {
+    display: none;
+    min-height: calc(100vh - 60px);
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  #authScreen.show { display: flex; }
+  .auth-card {
+    width: 100%; max-width: 440px;
     background: var(--bg2);
     border: 2px solid var(--border);
-    box-shadow: 0 0 30px rgba(255,34,34,0.15), inset 0 0 40px rgba(123,47,190,0.08);
+    padding: 32px;
+    box-shadow: 0 0 40px rgba(255,34,34,0.15), inset 0 0 60px rgba(123,47,190,0.08);
   }
-  .auth-box h2 {
-    color: var(--red);
-    margin-top: 0;
-    text-align: center;
-    letter-spacing: 3px;
-    font-size: 34px;
+  .auth-card h1 {
+    text-align: center; color: var(--red);
+    letter-spacing: 4px; font-size: 38px;
+    margin: 0 0 8px;
+    text-shadow: 0 0 16px var(--red-dark);
   }
-  .field { margin-bottom: 14px; }
+  .auth-card p.sub {
+    text-align: center; color: var(--text-dim);
+    font-size: 16px; margin: 0 0 24px;
+  }
+  .field { margin-bottom: 12px; }
   .field label {
-    display: block;
-    font-size: 18px;
-    color: var(--text-dim);
-    margin-bottom: 4px;
+    display: block; color: var(--text-dim);
+    font-size: 16px; margin-bottom: 4px;
+    letter-spacing: 1px;
   }
   .field input {
-    width: 100%;
-    padding: 8px 10px;
-    background: #06060a;
+    width: 100%; padding: 10px 12px;
+    background: #06060a; color: var(--text);
     border: 2px solid var(--border);
-    color: var(--text);
-    font-family: 'VT323', monospace;
-    font-size: 20px;
-    outline: none;
+    font-size: 20px; outline: none;
   }
-  .field input:focus {
-    border-color: var(--red);
-    box-shadow: 0 0 10px rgba(255,34,34,0.4);
-  }
+  .field input:focus { border-color: var(--red); box-shadow: 0 0 10px rgba(255,34,34,0.4); }
   .auth-msg {
-    text-align: center; min-height: 22px;
-    color: var(--red); font-size: 18px; margin-top: 10px;
+    min-height: 24px; color: var(--red);
+    text-align: center; font-size: 16px; margin-top: 8px;
   }
   .auth-switch {
-    text-align: center; margin-top: 12px;
-    font-size: 18px; color: var(--text-dim);
+    text-align: center; margin-top: 16px;
+    color: var(--text-dim); font-size: 16px;
   }
+  .auth-switch a { color: var(--red); cursor: pointer; }
+  .auth-switch a:hover { text-shadow: 0 0 6px var(--red); }
 
-  /* Profile */
-  .profile-card {
-    background: var(--bg2);
-    border: 2px solid var(--border);
-    padding: 22px;
-    margin-bottom: 26px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 18px;
-    box-shadow: inset 0 0 30px rgba(123,47,190,0.1);
+  /* ==================== TABS ==================== */
+  .tab { display: none; }
+  .tab.active { display: block; animation: fadeIn 0.25s; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* ==================== HOME ==================== */
+  .hero {
     position: relative;
+    height: 320px;
+    border: 2px solid var(--border);
+    background: linear-gradient(135deg, #1a0a2e 0%, #2a0a0a 100%);
+    display: flex; align-items: flex-end;
+    padding: 32px;
+    margin-bottom: 30px;
     overflow: hidden;
   }
-  .profile-card::after {
-    content: "3D";
-    position: absolute;
-    right: -10px; bottom: -30px;
-    font-size: 160px;
-    color: rgba(123,47,190,0.07);
-    letter-spacing: -6px;
+  .hero::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 70% 30%, rgba(255,34,34,0.3), transparent 50%),
+      radial-gradient(circle at 30% 70%, rgba(123,47,190,0.4), transparent 50%);
     pointer-events: none;
-    font-weight: bold;
   }
-  .profile-card .welcome {
-    font-size: 30px;
-    color: var(--text);
-    margin-bottom: 4px;
+  .hero::after {
+    content: "👁";
+    position: absolute;
+    right: 40px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 200px;
+    opacity: 0.08;
+    pointer-events: none;
   }
-  .profile-card .welcome .nick-highlight {
-    color: var(--red);
-    text-shadow: 0 0 10px var(--red-dark);
+  .hero-content {
+    position: relative; z-index: 1;
+    max-width: 600px;
   }
-  .profile-card .custards-big {
-    color: var(--warn);
-    font-size: 34px;
-    text-shadow: 0 0 10px rgba(232,211,71,0.5);
-    margin-top: 6px;
-  }
-  .profile-actions {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    z-index: 1;
-  }
-  .profile-actions .btn {
-    font-size: 22px;
-    padding: 10px 22px;
-  }
-
-  /* Section title */
-  .section-title {
-    font-size: 26px;
-    color: var(--purple);
-    text-shadow: 0 0 8px var(--purple-dark);
-    letter-spacing: 2px;
-    margin: 26px 0 14px;
-    border-left: 4px solid var(--red);
-    padding-left: 12px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .section-title .count {
-    font-size: 16px;
-    color: var(--text-dim);
-    background: var(--bg2);
-    border: 1px solid var(--border);
+  .hero-badge {
+    display: inline-block;
     padding: 2px 10px;
-    border-radius: 2px;
+    background: var(--red-dark);
+    border: 1px solid var(--red);
+    font-size: 14px;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+  .hero h2 {
+    font-size: 44px; margin: 0 0 8px;
+    color: #fff;
+    text-shadow: 0 0 20px var(--red);
+    letter-spacing: 2px;
+  }
+  .hero p {
+    color: var(--text); font-size: 20px;
+    margin: 0 0 20px;
+    max-width: 500px;
+    line-height: 1.3;
+  }
+  .hero-actions { display: flex; gap: 10px; }
+  .hero-actions .btn { padding: 10px 24px; font-size: 22px; }
+
+  .section-title {
+    font-size: 28px;
+    color: var(--text);
+    letter-spacing: 2px;
+    margin: 32px 0 16px;
+    padding-left: 12px;
+    border-left: 4px solid var(--red);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .section-title .sub {
+    font-size: 16px; color: var(--text-dim);
+    letter-spacing: 1px;
+    border: none; padding: 0;
   }
 
-  /* Games grid */
+  /* ==================== GAME CARDS ==================== */
   .games-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -258,107 +258,395 @@
   .game-card {
     background: var(--bg2);
     border: 2px solid var(--border);
-    padding: 18px;
+    overflow: hidden;
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
-    overflow: hidden;
   }
-  .game-card::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, var(--purple), var(--red));
-    opacity: 0.6;
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s;
-  }
-  .game-card:hover::before { transform: scaleX(1); }
-  .game-card::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(120deg, transparent 40%, rgba(255,34,34,0.08) 100%);
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-  .game-card:hover::after { opacity: 1; }
   .game-card:hover {
     border-color: var(--red);
     transform: translateY(-3px);
-    box-shadow: 0 6px 24px rgba(255,34,34,0.3);
+    box-shadow: 0 8px 24px rgba(255,34,34,0.25);
   }
-  .game-card h3 {
-    margin: 0 0 8px;
-    color: var(--red);
-    font-size: 26px;
-    letter-spacing: 1px;
-    line-height: 1.1;
-    word-break: break-word;
+  .game-thumb {
+    height: 130px;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 64px;
+    overflow: hidden;
   }
-  .game-card .author {
-    color: var(--text-dim);
-    font-size: 17px;
+  .game-thumb::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.5) 100%);
   }
-  .game-card .badge {
-    display: inline-block;
-    font-size: 14px;
-    padding: 2px 10px;
-    background: var(--purple-dark);
-    color: #eee;
-    margin-top: 10px;
-    letter-spacing: 1px;
-  }
-  .game-card .badge.official {
-    background: var(--red-dark);
+  .game-thumb .initial {
+    position: relative; z-index: 1;
     color: #fff;
+    text-shadow: 0 4px 12px rgba(0,0,0,0.8);
+    font-size: 72px;
+    font-weight: bold;
+    letter-spacing: -2px;
   }
-  .game-card .play {
-    margin-top: 14px;
-    display: block;
-    width: 100%;
-    text-align: center;
-    font-size: 22px;
-    padding: 8px 0;
+  .game-info { padding: 14px; }
+  .game-name {
+    color: var(--red); font-size: 22px;
+    margin: 0 0 4px; letter-spacing: 1px;
+    line-height: 1.1;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-
-  /* Empty state */
-  .empty-games {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-dim);
-    font-size: 22px;
-    border: 2px dashed var(--border);
-    background: var(--bg2);
+  .game-author { color: var(--text-dim); font-size: 15px; }
+  .game-stats {
+    display: flex; gap: 14px;
+    margin-top: 8px; color: var(--text-dim);
+    font-size: 15px;
   }
-  .empty-games .sub {
-    font-size: 16px;
+  .game-stats span { display: inline-flex; align-items: center; gap: 4px; }
+  .game-badge {
+    display: inline-block;
+    font-size: 12px;
+    padding: 1px 8px;
+    background: var(--purple-dark);
+    color: #fff;
+    letter-spacing: 1px;
     margin-top: 8px;
-    color: var(--text-dim);
-    opacity: 0.7;
+  }
+  .game-badge.official { background: var(--red-dark); }
+
+  .game-card .play-btn {
+    width: calc(100% - 28px);
+    margin: 0 14px 14px;
+    padding: 8px;
+    background: var(--red-dark);
+    border: 2px solid var(--red);
+    color: #fff;
+    font-size: 20px;
+    letter-spacing: 2px;
+    transition: all 0.15s;
+  }
+  .game-card .play-btn:hover {
+    background: var(--red);
+    box-shadow: 0 0 16px var(--red);
   }
 
-  /* Footer */
-  .footer-links {
-    margin-top: 50px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
-    text-align: center;
+  /* ==================== DISCOVER ==================== */
+  .discover-toolbar {
+    display: flex; gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .search-input {
+    flex: 1; min-width: 200px;
+    padding: 10px 14px;
+    background: var(--bg2);
+    border: 2px solid var(--border);
+    color: var(--text);
+    font-size: 20px;
+    outline: none;
+  }
+  .search-input:focus { border-color: var(--red); box-shadow: 0 0 10px rgba(255,34,34,0.3); }
+  .filter-tabs { display: flex; gap: 4px; }
+  .filter-tab {
+    padding: 8px 16px;
+    background: var(--bg2);
+    border: 2px solid var(--border);
     color: var(--text-dim);
-    font-size: 17px;
+    font-size: 18px;
+    cursor: pointer;
     letter-spacing: 1px;
   }
-  .footer-links a { margin: 0 12px; }
-  .footer-links .version {
-    display: block;
-    margin-top: 8px;
-    font-size: 14px;
-    color: #4a4a5a;
+  .filter-tab.active {
+    border-color: var(--red); color: var(--red);
+    background: rgba(255,34,34,0.1);
   }
 
-  /* Toast */
+  /* ==================== AVATAR ==================== */
+  .avatar-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 720px) { .avatar-layout { grid-template-columns: 1fr; } }
+  .avatar-preview-box {
+    background: var(--bg2);
+    border: 2px solid var(--border);
+    padding: 20px;
+    display: flex; flex-direction: column;
+    align-items: center;
+  }
+  #avatarCanvas {
+    background: #050508;
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+    image-rendering: pixelated;
+  }
+  .avatar-name {
+    color: var(--purple); font-size: 22px;
+    letter-spacing: 2px;
+    margin-top: 6px;
+  }
+  .slots-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-content: start;
+  }
+  .slot {
+    background: var(--bg2);
+    border: 2px solid var(--border);
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .slot:hover { border-color: var(--purple); }
+  .slot h4 {
+    margin: 0 0 8px;
+    color: var(--text-dim);
+    font-size: 14px; letter-spacing: 2px;
+  }
+  .slot .item-name {
+    color: var(--red); font-size: 20px;
+    letter-spacing: 1px;
+  }
+  .slot .item-icon {
+    font-size: 30px;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .slot .swatch {
+    width: 40px; height: 40px;
+    border: 2px solid #000;
+    display: inline-block;
+    margin-bottom: 4px;
+  }
+  .slot .hint {
+    color: var(--text-dim); font-size: 13px;
+    margin-top: 4px; letter-spacing: 1px;
+  }
+
+  /* ==================== MARKET ==================== */
+  .market-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .market-item {
+    background: var(--bg2);
+    border: 2px solid var(--border);
+    padding: 14px;
+    position: relative;
+    transition: all 0.15s;
+  }
+  .market-item:hover { border-color: var(--purple); }
+  .market-item.owned { border-color: var(--purple-dark); }
+  .market-item .rarity {
+    position: absolute; top: 8px; right: 8px;
+    font-size: 11px;
+    padding: 1px 8px;
+    letter-spacing: 1px;
+  }
+  .rarity.common { background: #2a2a3a; color: #aaa; }
+  .rarity.rare { background: #1a4a6a; color: #6ac; }
+  .rarity.epic { background: var(--purple-dark); color: #d8a; }
+  .rarity.legendary { background: var(--gold); color: #000; }
+  .market-item .item-icon {
+    font-size: 56px;
+    display: block; text-align: center;
+    margin: 8px 0 10px;
+  }
+  .market-item .swatch {
+    width: 70px; height: 70px;
+    border: 3px solid #000;
+    border-radius: 8px;
+    display: block;
+    margin: 8px auto 10px;
+  }
+  .market-item h3 {
+    margin: 0 0 8px;
+    color: var(--red); font-size: 20px;
+    text-align: center;
+  }
+  .market-item .price {
+    text-align: center; font-size: 20px;
+    color: var(--gold); margin-bottom: 10px;
+    text-shadow: 0 0 6px rgba(232,179,71,0.5);
+  }
+  .market-item .buy-btn {
+    width: 100%; padding: 6px;
+    background: var(--purple-dark);
+    border: 2px solid var(--purple);
+    color: #fff;
+    font-size: 18px;
+    letter-spacing: 2px;
+    transition: all 0.15s;
+  }
+  .market-item .buy-btn:hover {
+    background: var(--purple);
+    box-shadow: 0 0 12px var(--purple);
+  }
+  .market-item .buy-btn.owned {
+    background: #1a5f24; border-color: var(--ok);
+    color: #fff; cursor: default;
+  }
+
+  /* ==================== CUSTARDS ==================== */
+  .custard-hero {
+    background: linear-gradient(135deg, #2a1a00 0%, #1a0a1a 100%);
+    border: 2px solid var(--gold);
+    padding: 24px;
+    margin-bottom: 24px;
+    display: flex; justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .custard-hero h2 {
+    margin: 0; color: var(--gold); font-size: 34px;
+    letter-spacing: 2px;
+  }
+  .custard-hero .balance-display {
+    font-size: 32px;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(232,179,71,0.6);
+  }
+  .packages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .pkg-card {
+    background: var(--bg2);
+    border: 2px solid var(--border);
+    padding: 22px;
+    text-align: center;
+    position: relative;
+    transition: all 0.15s;
+  }
+  .pkg-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+  .pkg-icon { font-size: 56px; }
+  .pkg-amount {
+    font-size: 32px; color: var(--gold);
+    text-shadow: 0 0 10px rgba(232,179,71,0.5);
+    margin: 8px 0;
+  }
+  .pkg-bonus {
+    color: var(--ok); font-size: 16px;
+    margin-bottom: 8px;
+  }
+  .pkg-price {
+    color: var(--text); font-size: 22px;
+    margin-bottom: 14px;
+  }
+  .pkg-buy {
+    width: 100%; padding: 10px;
+    background: var(--gold); color: #000;
+    border: 2px solid var(--gold);
+    font-size: 20px; letter-spacing: 2px;
+    font-weight: bold;
+  }
+  .pkg-buy:hover { filter: brightness(1.2); box-shadow: 0 0 16px var(--gold); }
+  .pkg-buy.disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ==================== CODES ==================== */
+  .codes-layout { max-width: 600px; margin: 0 auto; }
+  .code-input-row {
+    display: flex; gap: 10px; margin-bottom: 24px;
+  }
+  .code-input {
+    flex: 1;
+    padding: 12px 16px;
+    background: #06060a;
+    border: 2px solid var(--border);
+    color: var(--text);
+    font-size: 24px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    outline: none;
+    text-align: center;
+  }
+  .code-input:focus { border-color: var(--red); box-shadow: 0 0 12px rgba(255,34,34,0.4); }
+  .code-redeemed-list {
+    background: var(--bg2);
+    border: 2px solid var(--border);
+    padding: 20px;
+  }
+  .code-redeemed-list h3 {
+    margin: 0 0 12px; color: var(--purple);
+    font-size: 20px; letter-spacing: 2px;
+  }
+  .code-redeemed {
+    padding: 8px 12px;
+    background: #06060a;
+    border-left: 3px solid var(--ok);
+    margin-bottom: 6px;
+    font-size: 18px;
+    display: flex; justify-content: space-between;
+  }
+  .code-hints {
+    margin-top: 20px;
+    color: var(--text-dim); font-size: 15px;
+    line-height: 1.4;
+  }
+  .code-hints code {
+    background: #06060a;
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    color: var(--purple);
+  }
+
+  /* ==================== MODAL ==================== */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: none; align-items: center; justify-content: center;
+    z-index: 10000; padding: 20px;
+  }
+  .modal-bg.show { display: flex; animation: fadeIn 0.2s; }
+  .modal-card {
+    background: var(--bg2);
+    border: 2px solid var(--red);
+    max-width: 700px; width: 100%;
+    max-height: 80vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 0 40px rgba(255,34,34,0.4);
+  }
+  .modal-header {
+    padding: 14px 20px;
+    border-bottom: 2px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .modal-header h2 { margin: 0; color: var(--red); font-size: 24px; letter-spacing: 2px; }
+  .modal-close {
+    background: none; border: none;
+    color: var(--text-dim); font-size: 28px;
+    cursor: pointer; padding: 0 8px;
+  }
+  .modal-close:hover { color: var(--red); }
+  .modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .modal-body .inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  .inv-item {
+    background: #06060a;
+    border: 2px solid var(--border);
+    padding: 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .inv-item:hover { border-color: var(--red); }
+  .inv-item.equipped { border-color: var(--ok); background: rgba(63,161,75,0.1); }
+  .inv-item .icon { font-size: 40px; display: block; margin-bottom: 6px; }
+  .inv-item .swatch { width: 50px; height: 50px; border: 2px solid #000; margin: 0 auto 6px; border-radius: 6px; display: block; }
+  .inv-item .name { color: var(--text); font-size: 16px; }
+
+  /* ==================== TOAST ==================== */
   .toast {
     position: fixed;
     bottom: 30px; left: 50%;
@@ -366,274 +654,864 @@
     background: var(--bg2);
     border: 2px solid var(--red);
     color: var(--text);
-    padding: 10px 22px;
-    z-index: 9500;
+    padding: 10px 24px;
+    z-index: 11000;
     transition: transform 0.3s;
     box-shadow: 0 0 20px rgba(255,34,34,0.5);
     max-width: 90vw;
     text-align: center;
+    font-size: 18px;
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
-  .toast.ok {
-    border-color: var(--ok);
-    box-shadow: 0 0 20px rgba(63,161,75,0.5);
+  .toast.ok { border-color: var(--ok); box-shadow: 0 0 20px rgba(63,161,75,0.5); }
+
+  .empty-state {
+    text-align: center; padding: 40px;
+    color: var(--text-dim); font-size: 20px;
+    border: 2px dashed var(--border);
+    background: var(--bg2);
   }
 </style>
 </head>
 <body>
 
-<div class="app">
-  <header class="top">
-    <div class="logo">
-      CUSTARD<span>BRICKS</span>
-      <small>— 3D PLATFORM —</small>
-    </div>
-    <div class="userbar" id="userbar"></div>
-  </header>
+<!-- ==================== TOP NAV ==================== -->
+<nav class="topnav" id="topnav" style="display:none;">
+  <div class="logo" onclick="App.go('home')">CUSTARD<span>BRICKS</span></div>
+  <div class="nav-links">
+    <button class="nav-link active" data-tab="home">Home</button>
+    <button class="nav-link" data-tab="discover">Descobrir</button>
+    <button class="nav-link" data-tab="avatar">Avatar</button>
+    <button class="nav-link" data-tab="market">Mercado</button>
+    <button class="nav-link" data-tab="custards">Custards</button>
+    <button class="nav-link" data-tab="codes">Códigos</button>
+    <button class="nav-link" onclick="location.href='studio.html'">Studio</button>
+  </div>
+  <div class="user-area" id="userArea"></div>
+</nav>
 
-  <!-- ================= LOGIN / REGISTRO ================= -->
-  <section id="viewLogin" style="display:none;">
-    <div class="auth-box">
-      <h2 id="authTitle">ENTRAR</h2>
-      <div class="field">
-        <label>Nick</label>
-        <input type="text" id="authNick" maxlength="16" autocomplete="off" placeholder="Ex: NooNoo" />
-      </div>
-      <div class="field">
-        <label>Senha</label>
-        <input type="password" id="authPass" maxlength="32" placeholder="••••" />
-      </div>
-      <button class="btn primary" id="authSubmit" style="width:100%;padding:10px;font-size:22px;margin-top:8px;">
-        ENTRAR
-      </button>
-      <div class="auth-msg" id="authMsg"></div>
-      <div class="auth-switch">
-        <span id="authSwitchText">Sem conta?</span>
-        <a href="#" id="authSwitchLink">Criar conta</a>
-      </div>
+<!-- ==================== AUTH SCREEN ==================== -->
+<div id="authScreen">
+  <div class="auth-card">
+    <h1 id="authTitle">ENTRAR</h1>
+    <p class="sub" id="authSub">Bem-vindo ao CustardBricks</p>
+    <div class="field">
+      <label>Nick</label>
+      <input type="text" id="authUser" maxlength="20" autocomplete="off" placeholder="NooNoo" />
     </div>
-  </section>
+    <div class="field" id="emailField" style="display:none;">
+      <label>Email</label>
+      <input type="email" id="authEmail" maxlength="60" placeholder="voce@exemplo.com" />
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="authPass" maxlength="32" placeholder="••••" />
+    </div>
+    <button class="btn primary" id="authBtn" style="width:100%; padding:12px; font-size:24px; margin-top:8px;">
+      ENTRAR
+    </button>
+    <div class="auth-msg" id="authMsg"></div>
+    <div class="auth-switch">
+      <span id="authSwitchText">Sem conta?</span>
+      <a id="authSwitchLink">Criar conta</a>
+    </div>
+  </div>
+</div>
 
-  <!-- ================= LOBBY ================= -->
-  <section id="viewLobby" style="display:none;">
-    <div class="profile-card">
-      <div>
-        <div class="welcome">
-          Bem-vindo, <span class="nick-highlight" id="lobbyNick">—</span>
-        </div>
-        <div style="color:var(--text-dim);font-size:18px;">Custards disponíveis:</div>
-        <div class="custards-big" id="lobbyCustards">0</div>
-      </div>
-      <div class="profile-actions">
-        <button class="btn primary" id="openStudioBtn" style="padding:12px 24px;">
-          🛠 ABRIR STUDIO 3D
-        </button>
-      </div>
-    </div>
+<!-- ==================== MAIN ==================== -->
+<main id="main" style="display:none;">
+
+  <!-- ===== HOME ===== -->
+  <div class="tab active" id="tab-home">
+    <div class="hero" id="homeHero"></div>
 
     <div class="section-title">
-      JOGOS 3D DISPONÍVEIS
-      <span class="count" id="gamesCount">0</span>
+      <span>EM DESTAQUE</span>
+      <span class="sub">jogos recomendados</span>
     </div>
-    <div class="games-grid" id="gamesGrid"></div>
-  </section>
+    <div class="games-grid" id="featuredGames"></div>
 
-  <div class="footer-links">
-    <a href="studio3d.html">Studio 3D</a> |
-    <a href="#" id="logoutLink">Sair</a>
-    <span class="version">CustardBricks 3D v0.1 — open source</span>
+    <div class="section-title">
+      <span>RECENTES</span>
+      <span class="sub">últimos lançamentos</span>
+    </div>
+    <div class="games-grid" id="recentGames"></div>
+  </div>
+
+  <!-- ===== DISCOVER ===== -->
+  <div class="tab" id="tab-discover">
+    <div class="discover-toolbar">
+      <input class="search-input" id="searchInput" placeholder="🔍 Buscar jogos..." />
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all">Todos</button>
+        <button class="filter-tab" data-filter="official">Oficiais</button>
+        <button class="filter-tab" data-filter="community">Comunidade</button>
+        <button class="filter-tab" data-filter="mine">Meus Jogos</button>
+      </div>
+    </div>
+    <div class="games-grid" id="discoverGames"></div>
+  </div>
+
+  <!-- ===== AVATAR ===== -->
+  <div class="tab" id="tab-avatar">
+    <div class="avatar-layout">
+      <div class="avatar-preview-box">
+        <canvas id="avatarCanvas" width="260" height="260"></canvas>
+        <div class="avatar-name" id="avatarName">—</div>
+      </div>
+      <div class="slots-panel">
+        <div class="slot" data-slot="body">
+          <h4>CORPO</h4>
+          <div id="slot-body"></div>
+          <div class="hint">clique para trocar</div>
+        </div>
+        <div class="slot" data-slot="face">
+          <h4>ROSTO</h4>
+          <div id="slot-face"></div>
+          <div class="hint">clique para trocar</div>
+        </div>
+        <div class="slot" data-slot="accessory">
+          <h4>ACESSÓRIO</h4>
+          <div id="slot-accessory"></div>
+          <div class="hint">clique para trocar</div>
+        </div>
+        <div class="slot" data-slot="effect">
+          <h4>EFEITO</h4>
+          <div id="slot-effect"></div>
+          <div class="hint">clique para trocar</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MARKET ===== -->
+  <div class="tab" id="tab-market">
+    <div class="discover-toolbar">
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-market="body">Corpos</button>
+        <button class="filter-tab" data-market="face">Rostos</button>
+        <button class="filter-tab" data-market="accessory">Acessórios</button>
+        <button class="filter-tab" data-market="effect">Efeitos</button>
+      </div>
+    </div>
+    <div class="market-grid" id="marketGrid"></div>
+  </div>
+
+  <!-- ===== CUSTARDS ===== -->
+  <div class="tab" id="tab-custards">
+    <div class="custard-hero">
+      <div>
+        <h2>💎 CUSTARDS</h2>
+        <p style="color:var(--text-dim); font-size:16px; margin:4px 0 0;">A moeda premium do CustardBricks</p>
+      </div>
+      <div>
+        <div style="color:var(--text-dim); font-size:14px;">Seu saldo</div>
+        <div class="balance-display" id="custardBalance">0</div>
+      </div>
+    </div>
+    <div class="section-title">
+      <span>COMPRAR CUSTARDS</span>
+      <span class="sub">compra simulada para demo</span>
+    </div>
+    <div class="packages-grid" id="packagesGrid"></div>
+  </div>
+
+  <!-- ===== CODES ===== -->
+  <div class="tab" id="tab-codes">
+    <div class="codes-layout">
+      <div class="section-title"><span>RESGATAR CÓDIGO</span></div>
+      <div class="code-input-row">
+        <input class="code-input" id="codeInput" placeholder="DIGITE O CÓDIGO" maxlength="20" />
+        <button class="btn primary" id="codeBtn" style="padding:0 24px; font-size:22px;">RESGATAR</button>
+      </div>
+      <div class="code-redeemed-list">
+        <h3>CÓDIGOS RESGATADOS</h3>
+        <div id="redeemedList"></div>
+      </div>
+      <div class="code-hints">
+        <p><b>💡 Dicas:</b></p>
+        <p>• Códigos são case-insensitive. Exemplo: <code>WELCOME100</code></p>
+        <p>• Siga o CustardBricks nas redes sociais para novos códigos!</p>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ==================== MODAL INVENTÁRIO ==================== -->
+<div class="modal-bg" id="invModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 id="invTitle">ESCOLHER ITEM</h2>
+      <button class="modal-close" onclick="App.closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="inventory-grid" id="invGrid"></div>
+    </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script src="core3d.js"></script>
+<script src="core.js"></script>
 <script>
-(function () {
+/* ============================================================
+   APP
+   ============================================================ */
+const App = (function () {
   'use strict';
-  const Core = window.Custard3D;
 
-  /* ---------- Toast ---------- */
-  const toastEl = document.getElementById('toast');
-  let toastTimer = null;
-  function toast(msg, isOk) {
-    toastEl.textContent = msg;
-    toastEl.classList.toggle('ok', !!isOk);
-    toastEl.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
-  }
-
-  /* ---------- DOM ---------- */
-  const viewLogin = document.getElementById('viewLogin');
-  const viewLobby = document.getElementById('viewLobby');
-  const userbar = document.getElementById('userbar');
-  const authTitle = document.getElementById('authTitle');
-  const authNick = document.getElementById('authNick');
-  const authPass = document.getElementById('authPass');
-  const authMsg = document.getElementById('authMsg');
-  const authSubmit = document.getElementById('authSubmit');
-  const authSwitchText = document.getElementById('authSwitchText');
-  const authSwitchLink = document.getElementById('authSwitchLink');
-  const lobbyNick = document.getElementById('lobbyNick');
-  const lobbyCustards = document.getElementById('lobbyCustards');
-  const gamesGrid = document.getElementById('gamesGrid');
-  const gamesCount = document.getElementById('gamesCount');
-  const logoutLink = document.getElementById('logoutLink');
-  const openStudioBtn = document.getElementById('openStudioBtn');
-
-  /* ---------- Auth state ---------- */
+  let currentTab = 'home';
+  let currentFilter = 'all';
+  let currentMarketCat = 'body';
+  let searchQuery = '';
   let authMode = 'login';
+  let pickerSlot = null;
 
-  function renderUserbar() {
-    const u = Core.getCurrentUser();
-    if (!u) { userbar.innerHTML = ''; return; }
-    userbar.innerHTML = `
-      <div class="custards">💰 ${u.custards} Custards</div>
-      <div class="nick">👤 ${escapeHTML(u.nick)}</div>
-    `;
-  }
-
-  function route() {
-    const u = Core.getCurrentUser();
-    if (u) {
-      viewLogin.style.display = 'none';
-      viewLobby.style.display = 'block';
-      lobbyNick.textContent = u.nick;
-      lobbyCustards.textContent = u.custards;
-      renderUserbar();
-      renderGames();
-    } else {
-      viewLogin.style.display = 'block';
-      viewLobby.style.display = 'none';
-      renderUserbar();
-      renderAuthForm();
-    }
-  }
-
-  /* ---------- Auth form ---------- */
-  function renderAuthForm() {
-    authMsg.textContent = '';
-    if (authMode === 'login') {
-      authTitle.textContent = 'ENTRAR';
-      authSubmit.textContent = 'ENTRAR';
-      authSwitchText.textContent = 'Sem conta?';
-      authSwitchLink.textContent = 'Criar conta';
-    } else {
-      authTitle.textContent = 'CRIAR CONTA';
-      authSubmit.textContent = 'REGISTRAR';
-      authSwitchText.textContent = 'Já tem conta?';
-      authSwitchLink.textContent = 'Entrar';
-    }
-  }
-
-  authSwitchLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    authMode = authMode === 'login' ? 'register' : 'login';
-    renderAuthForm();
-  });
-
-  authSubmit.addEventListener('click', () => {
-    const nick = authNick.value.trim();
-    const pass = authPass.value;
-    authMsg.textContent = '';
-
-    if (authMode === 'login') {
-      const r = Core.login(nick, pass);
-      if (!r.ok) { authMsg.textContent = r.error; return; }
-      toast('Bem-vindo, ' + r.user.nick + '!', true);
-      route();
-    } else {
-      const r = Core.register(nick, pass);
-      if (!r.ok) { authMsg.textContent = r.error; return; }
-      toast('Conta criada. +500 Custards de boas-vindas!', true);
-      route();
-    }
-  });
-
-  [authNick, authPass].forEach(el => {
-    el.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') authSubmit.click();
-    });
-  });
-
-  logoutLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    Core.logout();
-    route();
-    toast('Você saiu.');
-  });
-
-  openStudioBtn.addEventListener('click', () => {
-    window.location.href = 'studio3d.html';
-  });
-
-  /* ---------- Games feed ---------- */
+  /* ---------- Utils ---------- */
   function escapeHTML(s) {
     return String(s).replace(/[&<>"']/g, m => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     }[m]));
   }
+  const toastEl = document.getElementById('toast');
+  let toastTimer = null;
+  function toast(msg, ok) {
+    toastEl.textContent = msg;
+    toastEl.classList.toggle('ok', !!ok);
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
+  }
 
-  function renderGames() {
-    const games = Core.getGames();
-    gamesGrid.innerHTML = '';
-    gamesCount.textContent = games.length;
+  function hashStr(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+    return Math.abs(h);
+  }
+  function gradientFor(id) {
+    const h = hashStr(id || 'x');
+    const h1 = h % 360;
+    const h2 = (h * 7) % 360;
+    return `linear-gradient(135deg, hsl(${h1}, 55%, 22%), hsl(${h2}, 65%, 38%))`;
+  }
 
-    if (!games.length) {
-      gamesGrid.innerHTML = `
-        <div class="empty-games" style="grid-column: 1/-1;">
-          Nenhum jogo publicado ainda.
-          <div class="sub">Abra o Studio 3D e crie o primeiro!</div>
-        </div>`;
-      return;
+  /* ---------- Nav / Routing ---------- */
+  function go(tab) {
+    if (!CORE.getCurrentUser()) { showAuth(); return; }
+    currentTab = tab;
+    document.querySelectorAll('.nav-link').forEach(b => {
+      b.classList.toggle('active', b.dataset.tab === tab);
+    });
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    const el = document.getElementById('tab-' + tab);
+    if (el) el.classList.add('active');
+    if (tab === 'home') renderHome();
+    if (tab === 'discover') renderDiscover();
+    if (tab === 'avatar') renderAvatar();
+    if (tab === 'market') renderMarket();
+    if (tab === 'custards') renderCustards();
+    if (tab === 'codes') renderCodes();
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- Auth UI ---------- */
+  function showAuth() {
+    document.getElementById('topnav').style.display = 'none';
+    document.getElementById('main').style.display = 'none';
+    document.getElementById('authScreen').classList.add('show');
+    renderAuthForm();
+  }
+  function showApp() {
+    document.getElementById('authScreen').classList.remove('show');
+    document.getElementById('topnav').style.display = 'flex';
+    document.getElementById('main').style.display = 'block';
+    renderUserArea();
+    go('home');
+  }
+
+  function renderAuthForm() {
+    const title = document.getElementById('authTitle');
+    const sub = document.getElementById('authSub');
+    const btn = document.getElementById('authBtn');
+    const emailF = document.getElementById('emailField');
+    const switchText = document.getElementById('authSwitchText');
+    const switchLink = document.getElementById('authSwitchLink');
+    document.getElementById('authMsg').textContent = '';
+    if (authMode === 'login') {
+      title.textContent = 'ENTRAR';
+      sub.textContent = 'Bem-vindo de volta ao CustardBricks';
+      btn.textContent = 'ENTRAR';
+      emailF.style.display = 'none';
+      switchText.textContent = 'Sem conta?';
+      switchLink.textContent = 'Criar conta';
+    } else {
+      title.textContent = 'CRIAR CONTA';
+      sub.textContent = 'Junte-se ao CustardBricks e ganhe 500 Custards';
+      btn.textContent = 'REGISTRAR';
+      emailF.style.display = 'block';
+      switchText.textContent = 'Já tem conta?';
+      switchLink.textContent = 'Entrar';
+    }
+  }
+
+  document.getElementById('authSwitchLink').addEventListener('click', () => {
+    authMode = authMode === 'login' ? 'register' : 'login';
+    renderAuthForm();
+  });
+
+  document.getElementById('authBtn').addEventListener('click', () => {
+    const u = document.getElementById('authUser').value.trim();
+    const e = document.getElementById('authEmail').value.trim();
+    const p = document.getElementById('authPass').value;
+    const msg = document.getElementById('authMsg');
+    msg.textContent = '';
+
+    let r;
+    if (authMode === 'login') {
+      r = CORE.login(u, p);
+    } else {
+      r = CORE.register(u, e, p);
+    }
+    if (!r.ok) { msg.textContent = r.error; return; }
+    toast(authMode === 'login' ? 'Bem-vindo de volta!' : 'Conta criada! +500 Custards', true);
+    showApp();
+  });
+
+  ['authUser','authPass','authEmail'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('authBtn').click();
+    });
+  });
+
+  /* ---------- User area ---------- */
+  function renderUserArea() {
+    const u = CORE.getCurrentUser();
+    if (!u) return;
+    const av = CORE.getAvatar();
+    const bodyItem = CORE.getMarketItem(av.body);
+    const bodyColor = bodyItem ? bodyItem.color : '#7b2fbe';
+    document.getElementById('userArea').innerHTML = `
+      <div class="balance-chip" title="Custards">💰 ${u.custards}</div>
+      <div class="user-chip">
+        <span class="mini-avatar" style="background:${bodyColor};"></span>
+        <span>@${escapeHTML(u.username)}</span>
+      </div>
+      <button class="btn" onclick="App.logout()">Sair</button>
+    `;
+  }
+
+  function logout() {
+    CORE.logout();
+    showAuth();
+    toast('Você saiu');
+  }
+
+  /* ---------- Home ---------- */
+  function renderHome() {
+    const games = CORE.getGames();
+    const featured = games.slice(0, 1)[0];
+    const recent = games.slice(1, 5);
+
+    if (featured) {
+      document.getElementById('homeHero').innerHTML = `
+        <div class="hero-content">
+          <span class="hero-badge">⭐ DESTAQUE</span>
+          <h2>${escapeHTML(featured.name)}</h2>
+          <p>${escapeHTML(featured.description || 'Explore este mundo.')}</p>
+          <div class="hero-actions">
+            <button class="btn primary" onclick="App.playGame('${featured.id}')">▶ JOGAR AGORA</button>
+            <button class="btn" onclick="App.go('discover')">Ver Todos</button>
+          </div>
+        </div>
+      `;
     }
 
-    games.forEach(g => {
-      const card = document.createElement('div');
-      card.className = 'game-card';
-      card.innerHTML = `
-        <h3>${escapeHTML(g.name)}</h3>
-        <div class="author">por ${escapeHTML(g.author || 'Anônimo')}</div>
-        <div class="badge ${g.official ? 'official' : ''}">
-          ${g.official ? 'OFICIAL' : 'COMUNIDADE'}
+    document.getElementById('featuredGames').innerHTML = games.slice(0, 4).map(gameCardHTML).join('');
+    document.getElementById('recentGames').innerHTML = recent.length
+      ? recent.map(gameCardHTML).join('')
+      : '<div class="empty-state" style="grid-column:1/-1">Nenhum jogo recente. Crie no Studio!</div>';
+  }
+
+  function gameCardHTML(g) {
+    const grad = gradientFor(g.id);
+    const initial = (g.name || '?')[0].toUpperCase();
+    return `
+      <div class="game-card">
+        <div class="game-thumb" style="background:${grad};">
+          <span class="initial">${initial}</span>
         </div>
-        <button class="btn primary play">▶ JOGAR</button>
+        <div class="game-info">
+          <h3 class="game-name" title="${escapeHTML(g.name)}">${escapeHTML(g.name)}</h3>
+          <div class="game-author">por @${escapeHTML(g.author)}</div>
+          <div class="game-stats">
+            <span>▶ ${g.plays || 0}</span>
+            <span>♥ ${g.likes || 0}</span>
+          </div>
+          <span class="game-badge ${g.official ? 'official' : ''}">${g.official ? 'OFICIAL' : 'COMUNIDADE'}</span>
+        </div>
+        <button class="play-btn" onclick="App.playGame('${g.id}')">▶ JOGAR</button>
+      </div>
+    `;
+  }
+
+  /* ---------- Discover ---------- */
+  function renderDiscover() {
+    let games = CORE.getGames();
+    if (currentFilter === 'official') games = games.filter(g => g.official);
+    else if (currentFilter === 'community') games = games.filter(g => !g.official);
+    else if (currentFilter === 'mine') games = CORE.getMyGames();
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      games = games.filter(g => g.name.toLowerCase().includes(q) || g.author.toLowerCase().includes(q));
+    }
+    document.getElementById('discoverGames').innerHTML = games.length
+      ? games.map(gameCardHTML).join('')
+      : '<div class="empty-state" style="grid-column:1/-1">Nenhum jogo encontrado.</div>';
+  }
+
+  document.getElementById('searchInput').addEventListener('input', e => {
+    searchQuery = e.target.value;
+    renderDiscover();
+  });
+  document.querySelectorAll('.filter-tab[data-filter]').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.filter-tab[data-filter]').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      currentFilter = t.dataset.filter;
+      renderDiscover();
+    });
+  });
+
+  /* ---------- Play ---------- */
+  function playGame(id) {
+    CORE.incrementPlays(id);
+    CORE.setSelectedGame(id);
+    window.location.href = 'engine.html';
+  }
+
+  /* ---------- Avatar ---------- */
+  function renderAvatar() {
+    const u = CORE.getCurrentUser();
+    const av = CORE.getAvatar();
+    document.getElementById('avatarName').textContent = '@' + u.username;
+    drawAvatarPreview();
+    renderSlot('body', av.body);
+    renderSlot('face', av.face);
+    renderSlot('accessory', av.accessory);
+    renderSlot('effect', av.effect);
+  }
+
+  function renderSlot(slot, itemId) {
+    const item = CORE.getMarketItem(itemId);
+    if (!item) return;
+    const el = document.getElementById('slot-' + slot);
+    if (item.icon === 'swatch') {
+      el.innerHTML = `
+        <span class="swatch" style="background:${item.color};"></span>
+        <div class="item-name">${escapeHTML(item.name)}</div>
       `;
-      card.addEventListener('click', () => playGame(g.id));
-      gamesGrid.appendChild(card);
+    } else {
+      el.innerHTML = `
+        <span class="item-icon">${item.icon}</span>
+        <div class="item-name">${escapeHTML(item.name)}</div>
+      `;
+    }
+  }
+
+  document.querySelectorAll('.slot').forEach(slotEl => {
+    slotEl.addEventListener('click', () => {
+      pickerSlot = slotEl.dataset.slot;
+      openInventoryPicker(pickerSlot);
+    });
+  });
+
+  function openInventoryPicker(slot) {
+    const inv = CORE.getInventory();
+    const items = CORE.MARKET_ITEMS.filter(i => i.slot === slot && inv.includes(i.id));
+    const av = CORE.getAvatar();
+    const currentItem = av[slot];
+
+    document.getElementById('invTitle').textContent = 'ESCOLHER ' + slot.toUpperCase();
+    const grid = document.getElementById('invGrid');
+    grid.innerHTML = items.map(item => {
+      const equipped = item.id === currentItem;
+      const iconHTML = item.icon === 'swatch'
+        ? `<span class="swatch" style="background:${item.color};"></span>`
+        : `<span class="icon">${item.icon}</span>`;
+      return `
+        <div class="inv-item ${equipped ? 'equipped' : ''}" data-id="${item.id}">
+          ${iconHTML}
+          <div class="name">${escapeHTML(item.name)}</div>
+        </div>
+      `;
+    }).join('') || '<div class="empty-state" style="grid-column:1/-1">Nenhum item nesta categoria.</div>';
+
+    grid.querySelectorAll('.inv-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const itemId = el.dataset.id;
+        const r = CORE.equipItem(itemId);
+        if (r.ok) {
+          toast('Item equipado!', true);
+          closeModal();
+          renderAvatar();
+          renderUserArea();
+        } else {
+          toast(r.error, false);
+        }
+      });
+    });
+
+    document.getElementById('invModal').classList.add('show');
+  }
+
+  function closeModal() {
+    document.getElementById('invModal').classList.remove('show');
+  }
+
+  /* ---------- Avatar Drawing ---------- */
+  function drawAvatarPreview() {
+    const canvas = document.getElementById('avatarCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#050508';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(123,47,190,0.12)';
+    for (let i = 0; i < W; i += 20) {
+      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke();
+    }
+
+    const av = CORE.getAvatar();
+    const cx = W / 2, cy = H / 2 + 10;
+
+    // Effect (behind)
+    if (av.effect === 'fx_glow') {
+      const g = ctx.createRadialGradient(cx, cy, 20, cx, cy, 110);
+      g.addColorStop(0, 'rgba(123,47,190,0.7)');
+      g.addColorStop(1, 'rgba(123,47,190,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+    }
+    if (av.effect === 'fx_fire') {
+      const g = ctx.createRadialGradient(cx, cy, 20, cx, cy, 130);
+      g.addColorStop(0, 'rgba(255,100,0,0.55)');
+      g.addColorStop(1, 'rgba(255,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // Body
+    const bodyR = 70;
+    const bodyColor = (CORE.getMarketItem(av.body) || {}).color || '#7b2fbe';
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + bodyR + 10, bodyR * 0.9, bodyR * 0.25, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ears
+    ctx.fillStyle = bodyColor;
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(cx - bodyR * 0.65, cy - bodyR * 0.65, bodyR * 0.22, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx + bodyR * 0.65, cy - bodyR * 0.65, bodyR * 0.22, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+
+    // Body circle
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    ctx.arc(cx, cy, bodyR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Face circle
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.beginPath();
+    ctx.arc(cx, cy + 8, bodyR * 0.72, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Draw face
+    drawFace(ctx, cx, cy + 8, bodyR * 0.72, av.face);
+
+    // Accessory
+    drawAccessory(ctx, cx, cy, bodyR, av.accessory);
+
+    // Effect front (static)
+    if (av.effect === 'fx_static') {
+      for (let i = 0; i < 200; i++) {
+        ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.4})`;
+        ctx.fillRect(cx - bodyR + Math.random() * bodyR * 2, cy - bodyR + Math.random() * bodyR * 2, 2, 2);
+      }
+    }
+  }
+
+  function drawFace(ctx, cx, cy, r, faceId) {
+    ctx.save();
+    switch (faceId) {
+      case 'face_normal':
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(cx - r * 0.3, cy - r * 0.15, r * 0.13, 0, Math.PI * 2);
+        ctx.arc(cx + r * 0.3, cy - r * 0.15, r * 0.13, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = r * 0.09;
+        ctx.beginPath();
+        ctx.arc(cx, cy + r * 0.15, r * 0.3, 0.15 * Math.PI, 0.85 * Math.PI);
+        ctx.stroke();
+        break;
+      case 'face_creepy':
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(cx - r * 0.3, cy - r * 0.15, r * 0.14, 0, Math.PI * 2);
+        ctx.arc(cx + r * 0.3, cy - r * 0.15, r * 0.14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#a00';
+        ctx.lineWidth = r * 0.12;
+        ctx.beginPath();
+        ctx.arc(cx, cy + r * 0.05, r * 0.5, 0.1 * Math.PI, 0.9 * Math.PI);
+        ctx.stroke();
+        break;
+      case 'face_glitch':
+        ctx.fillStyle = '#f0f';
+        ctx.fillRect(cx - r * 0.5, cy - r * 0.25, r * 0.35, r * 0.2);
+        ctx.fillStyle = '#0ff';
+        ctx.fillRect(cx + r * 0.15, cy - r * 0.25, r * 0.35, r * 0.2);
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = r * 0.08;
+        ctx.beginPath();
+        ctx.moveTo(cx - r * 0.45, cy + r * 0.25);
+        ctx.lineTo(cx + r * 0.45, cy + r * 0.25);
+        ctx.stroke();
+        break;
+      case 'face_bloody':
+        ctx.shadowColor = '#ff0000';
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = '#ff0000';
+        ctx.beginPath();
+        ctx.arc(cx - r * 0.3, cy - r * 0.15, r * 0.16, 0, Math.PI * 2);
+        ctx.arc(cx + r * 0.3, cy - r * 0.15, r * 0.16, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#a00';
+        ctx.lineWidth = r * 0.08;
+        ctx.beginPath();
+        ctx.arc(cx, cy + r * 0.3, r * 0.22, 0.15 * Math.PI, 0.85 * Math.PI);
+        ctx.stroke();
+        break;
+    }
+    ctx.restore();
+  }
+
+  function drawAccessory(ctx, cx, cy, r, accId) {
+    ctx.save();
+    switch (accId) {
+      case 'acc_antenna':
+        ctx.strokeStyle = '#ddd';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - r * 1.1);
+        ctx.lineTo(cx, cy - r * 1.8);
+        ctx.stroke();
+        ctx.fillStyle = '#ddd';
+        ctx.beginPath();
+        ctx.arc(cx, cy - r * 1.85, r * 0.13, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      case 'acc_hat':
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(cx - r * 0.55, cy - r * 1.35, r * 1.1, r * 0.15);
+        ctx.fillRect(cx - r * 0.4, cy - r * 2.1, r * 0.8, r * 0.7);
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(cx - r * 0.55, cy - r * 1.35, r * 1.1, r * 0.15);
+        ctx.strokeRect(cx - r * 0.4, cy - r * 2.1, r * 0.8, r * 0.7);
+        ctx.fillStyle = '#a00';
+        ctx.fillRect(cx - r * 0.4, cy - r * 1.6, r * 0.8, r * 0.1);
+        break;
+      case 'acc_horns':
+        ctx.fillStyle = '#a00';
+        ctx.beginPath();
+        ctx.moveTo(cx - r * 0.55, cy - r * 0.85);
+        ctx.lineTo(cx - r * 0.75, cy - r * 1.6);
+        ctx.lineTo(cx - r * 0.3, cy - r * 0.95);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx + r * 0.55, cy - r * 0.85);
+        ctx.lineTo(cx + r * 0.75, cy - r * 1.6);
+        ctx.lineTo(cx + r * 0.3, cy - r * 0.95);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      case 'acc_crown':
+        ctx.fillStyle = '#e8b347';
+        ctx.beginPath();
+        ctx.moveTo(cx - r * 0.55, cy - r * 1.05);
+        ctx.lineTo(cx - r * 0.55, cy - r * 1.65);
+        ctx.lineTo(cx - r * 0.25, cy - r * 1.35);
+        ctx.lineTo(cx, cy - r * 1.75);
+        ctx.lineTo(cx + r * 0.25, cy - r * 1.35);
+        ctx.lineTo(cx + r * 0.55, cy - r * 1.65);
+        ctx.lineTo(cx + r * 0.55, cy - r * 1.05);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#a07a10';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        break;
+      case 'acc_halo':
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 4;
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 20;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy - r * 1.55, r * 0.4, r * 0.15, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        break;
+    }
+    ctx.restore();
+  }
+
+  /* ---------- Market ---------- */
+  function renderMarket() {
+    const items = CORE.getMarketItems().filter(i => i.category === currentMarketCat);
+    const grid = document.getElementById('marketGrid');
+    grid.innerHTML = items.map(item => {
+      const iconHTML = item.icon === 'swatch'
+        ? `<span class="swatch" style="background:${item.color};"></span>`
+        : `<span class="item-icon">${item.icon}</span>`;
+      const btn = item.owned
+        ? `<button class="buy-btn owned" disabled>✓ COMPRADO</button>`
+        : (item.price === 0
+            ? `<button class="buy-btn" data-id="${item.id}">GRÁTIS</button>`
+            : `<button class="buy-btn" data-id="${item.id}">COMPRAR • 💰${item.price}</button>`);
+      return `
+        <div class="market-item ${item.owned ? 'owned' : ''}">
+          <span class="rarity ${item.rarity}">${item.rarity.toUpperCase()}</span>
+          ${iconHTML}
+          <h3>${escapeHTML(item.name)}</h3>
+          <div class="price">${item.price === 0 ? 'GRÁTIS' : '💰 ' + item.price}</div>
+          ${btn}
+        </div>
+      `;
+    }).join('');
+
+    grid.querySelectorAll('.buy-btn[data-id]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const r = CORE.buyItem(id);
+        if (r.ok) {
+          toast('Item adquirido!', true);
+          renderMarket();
+          renderUserArea();
+        } else {
+          toast(r.error, false);
+        }
+      });
     });
   }
 
-  function playGame(id) {
-    const game = Core.getGameById(id);
-    if (!game) { toast('Jogo não encontrado.', false); return; }
-    sessionStorage.setItem('cb3d_selected_game', id);
-    window.location.href = 'engine3d.html';
+  document.querySelectorAll('.filter-tab[data-market]').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.filter-tab[data-market]').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      currentMarketCat = t.dataset.market;
+      renderMarket();
+    });
+  });
+
+  /* ---------- Custards ---------- */
+  function renderCustards() {
+    document.getElementById('custardBalance').textContent = CORE.getCustards();
+    const pkgs = CORE.getCustardPackages();
+    document.getElementById('packagesGrid').innerHTML = pkgs.map(p => `
+      <div class="pkg-card">
+        <div class="pkg-icon">💎</div>
+        <div class="pkg-amount">${p.custards.toLocaleString()}</div>
+        ${p.bonus > 0 ? `<div class="pkg-bonus">+ ${p.bonus} BÔNUS!</div>` : '<div class="pkg-bonus" style="opacity:0;">&nbsp;</div>'}
+        <div class="pkg-price">${p.label}</div>
+        <button class="pkg-buy" data-pkg="${p.id}">COMPRAR</button>
+      </div>
+    `).join('');
+
+    document.querySelectorAll('.pkg-buy').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pkgId = btn.dataset.pkg;
+        const pkg = pkgs.find(p => p.id === pkgId);
+        const total = pkg.custards + pkg.bonus;
+        if (confirm(`Simular compra de ${pkg.custards}${pkg.bonus ? '+' + pkg.bonus : ''} Custards por ${pkg.label}?\n\n(Compra simulada — nenhum pagamento real)`)) {
+          const r = CORE.purchaseCustards(pkgId);
+          if (r.ok) {
+            toast(`+${total} Custards adicionados!`, true);
+            renderCustards();
+            renderUserArea();
+          }
+        }
+      });
+    });
   }
 
-  /* ---------- Sync ---------- */
-  // Ao voltar do engine (que adiciona custards), atualiza
-  window.addEventListener('focus', () => {
-    const u = Core.getCurrentUser();
-    if (u) {
-      lobbyCustards.textContent = u.custards;
-      renderUserbar();
-      renderGames();
+  /* ---------- Codes ---------- */
+  function renderCodes() {
+    const redeemed = CORE.getRedeemedCodes();
+    const listEl = document.getElementById('redeemedList');
+    if (redeemed.length === 0) {
+      listEl.innerHTML = '<div style="color:var(--text-dim); text-align:center; padding:16px;">Nenhum código resgatado ainda.</div>';
+    } else {
+      listEl.innerHTML = redeemed.map(c => `
+        <div class="code-redeemed">
+          <span>${escapeHTML(c)}</span>
+          <span style="color:var(--ok);">✓ resgatado</span>
+        </div>
+      `).join('');
+    }
+  }
+
+  document.getElementById('codeBtn').addEventListener('click', () => {
+    const code = document.getElementById('codeInput').value;
+    const r = CORE.redeemCode(code);
+    if (r.ok) {
+      toast(`+${r.custards} Custards! Saldo: ${r.balance}`, true);
+      document.getElementById('codeInput').value = '';
+      renderCodes();
+      renderUserArea();
+    } else {
+      toast(r.error, false);
     }
   });
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
-      const u = Core.getCurrentUser();
-      if (u) {
-        lobbyCustards.textContent = u.custards;
-        renderUserbar();
-      }
-    }
+  document.getElementById('codeInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('codeBtn').click();
   });
 
   /* ---------- Boot ---------- */
-  route();
+  function boot() {
+    if (CORE.getCurrentUser()) showApp();
+    else showAuth();
+  }
+
+  // Atualiza saldo ao voltar de outra aba
+  window.addEventListener('focus', () => {
+    if (CORE.getCurrentUser()) renderUserArea();
+  });
+
+  boot();
+
+  return {
+    go, logout, playGame, closeModal,
+    showAuth, showApp
+  };
 })();
 </script>
 </body>
