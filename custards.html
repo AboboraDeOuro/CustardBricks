@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8"><title>Custards — CustardBricks</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head><body>
+<nav id="topnav" class="topnav"></nav>
+<main class="page">
+  <h1>CUSTARDS</h1>
+  <div class="pkg-hero">
+    <div><h2>💎 CUSTARDS</h2><p style="color:var(--text-dim);font-size:16px;margin:4px 0 0;">A moeda premium do CustardBricks</p></div>
+    <div><div style="color:var(--text-dim);font-size:14px;">Seu saldo</div><div class="balance" id="balance">0</div></div>
+  </div>
+  <h2 class="sec">COMPRAR CUSTARDS</h2>
+  <div class="packages-grid" id="grid"></div>
+</main>
+<script src="core.js"></script>
+<script src="shared.js"></script>
+<script>
+(function () {
+  const pkgs = CORE.getCustardPackages();
+  function render() {
+    document.getElementById('balance').textContent = CORE.getCustards();
+    document.getElementById('grid').innerHTML = pkgs.map(p => `
+      <div class="pkg-card">
+        <div class="pkg-icon">💎</div>
+        <div class="pkg-amount">${p.custards.toLocaleString()}</div>
+        <div class="pkg-bonus">${p.bonus>0?'+ '+p.bonus+' BÔNUS':'&nbsp;'}</div>
+        <div class="pkg-price">${p.label}</div>
+        <button class="pkg-buy" data-id="${p.id}">COMPRAR</button>
+      </div>`).join('');
+    document.querySelectorAll('.pkg-buy').forEach(b => b.onclick = () => {
+      const pkg = pkgs.find(x => x.id === b.dataset.id);
+      const total = pkg.custards + pkg.bonus;
+      if (confirm(`Simular compra de ${pkg.custards}${pkg.bonus?'+'+pkg.bonus:''} Custards por ${pkg.label}?\n\n(Simulação — sem pagamento real)`)) {
+        const r = CORE.purchaseCustards(b.dataset.id);
+        if (r.ok) { toast(`+${total} Custards!`, true); render(); renderNav(); }
+      }
+    });
+  }
+  render();
+})();
+</script>
+</body></html>
