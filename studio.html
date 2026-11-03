@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CustardBricks — Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a10;
+    --bg2: #12121c;
+    --red: #ff2222;
+    --red-dark: #a01515;
+    --purple: #7b2fbe;
+    --purple-dark: #4a1a72;
+    --text: #d8d0e0;
+    --text-dim: #8a839a;
+    --border: #2a2a3a;
+    --ok: #3fa14b;
+    --warn: #e8d347;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    overflow: hidden;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%);
+    z-index: 9000;
+  }
+  body::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.03) 0px,
+      rgba(255,255,255,0.03) 1px,
+      transparent 1px, transparent 3px
+    );
+    z-index: 9001; mix-blend-mode: overlay;
+    animation: flicker 0.15s infinite;
+  }
+  @keyframes flicker { 0%{opacity:.9}50%{opacity:1}100%{opacity:.85} }
+
+  .layout {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 18px;
+    background: var(--bg2);
+    border-bottom: 2px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .topbar .logo {
+    font-size: 26px; letter-spacing: 2px; color: var(--red);
+    text-shadow: 0 0 10px var(--red-dark);
+  }
+  .topbar .logo span { color: var(--purple); }
+  .topbar input[type="text"] {
+    flex: 1; min-width: 180px;
+    padding: 6px 10px;
+    background: #06060a;
+    border: 2px solid var(--border);
+    color: var(--text);
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    outline: none;
+  }
+  .topbar input[type="text"]:focus {
+    border-color: var(--red);
+    box-shadow: 0 0 10px rgba(255,34,34,0.4);
+  }
+  .btn {
+    font-family: 'VT323', monospace;
+    font-size: 20px;
+    padding: 6px 14px;
+    background: var(--bg2);
+    color: var(--text);
+    border: 2px solid var(--border);
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+  .btn:hover {
+    border-color: var(--red); color: var(--red);
+    box-shadow: 0 0 10px rgba(255,34,34,0.4);
+  }
+  .btn.primary {
+    background: var(--red-dark); border-color: var(--red); color: #fff;
+  }
+  .btn.primary:hover { background: var(--red); box-shadow: 0 0 16px var(--red); }
+  .btn.danger { border-color: var(--red); color: var(--red); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* MAIN */
+  .main {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    overflow: hidden;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    background: var(--bg2);
+    border-right: 2px solid var(--border);
+    padding: 14px 10px;
+    overflow-y: auto;
+  }
+  .sidebar h3 {
+    color: var(--purple);
+    font-size: 20px;
+    letter-spacing: 2px;
+    margin: 0 0 10px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+  .tool {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: #06060a;
+    border: 2px solid var(--border);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .tool:hover { border-color: var(--purple); }
+  .tool.active {
+    border-color: var(--red);
+    background: rgba(255,34,34,0.08);
+    box-shadow: 0 0 10px rgba(255,34,34,0.35);
+  }
+  .tool .icon {
+    width: 26px; height: 26px;
+    border: 2px solid #000;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .tool .label { font-size: 18px; }
+  .tool .hint { font-size: 14px; color: var(--text-dim); display: block; }
+
+  .eraser-hint {
+    margin-top: 14px;
+    padding: 10px;
+    border: 1px dashed var(--border);
+    color: var(--text-dim);
+    font-size: 16px;
+    line-height: 1.4;
+  }
+
+  /* STAGE */
+  .stage {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 18px;
+    overflow: auto;
+    position: relative;
+  }
+  .grid-wrap {
+    background: #050508;
+    padding: 10px;
+    border: 2px solid var(--border);
+    box-shadow: 0 0 30px rgba(123,47,190,0.2), inset 0 0 40px rgba(0,0,0,0.8);
+    position: relative;
+  }
+  canvas#gridCanvas {
+    display: block;
+    image-rendering: pixelated;
+    cursor: crosshair;
+  }
+  .stage-info {
+    margin-top: 12px;
+    color: var(--text-dim);
+    font-size: 18px;
+    text-align: center;
+  }
+  .stage-info b { color: var(--red); }
+
+  /* MSG/TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(120px);
+    background: var(--bg2);
+    border: 2px solid var(--red);
+    padding: 10px 20px;
+    z-index: 9500;
+    transition: transform 0.3s;
+    box-shadow: 0 0 20px rgba(255,34,34,0.5);
+    max-width: 90vw;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.ok { border-color: var(--ok); box-shadow: 0 0 20px rgba(63,161,75,0.5); }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="logo">STUDIO<span>.</span></div>
+    <input type="text" id="gameName" maxlength="40" placeholder="Nome do seu jogo..." />
+    <button class="btn" id="clearBtn">🗑 LIMPAR</button>
+    <button class="btn" id="fillBtn">🧱 MURAR BORDA</button>
+    <button class="btn primary" id="publishBtn">🚀 PUBLICAR</button>
+    <button class="btn" id="backBtn">← VOLTAR</button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <h3>BLOCOS</h3>
+      <div class="tool" data-tool="floor">
+        <div class="icon" style="background:#2a2a3a;"></div>
+        <div>
+          <div class="label">Chão</div>
+          <span class="hint">Andável</span>
+        </div>
+      </div>
+      <div class="tool" data-tool="wall">
+        <div class="icon" style="background:#6a6a7a;"></div>
+        <div>
+          <div class="label">Parede</div>
+          <span class="hint">Bloqueia</span>
+        </div>
+      </div>
+      <div class="tool" data-tool="custard">
+        <div class="icon" style="background:#ff9ed0; border-radius:50%;"></div>
+        <div>
+          <div class="label">Creme de Aveia</div>
+          <span class="hint">+1 Custard</span>
+        </div>
+      </div>
+      <div class="tool" data-tool="spawn_player">
+        <div class="icon" style="background:#7b2fbe;">P</div>
+        <div>
+          <div class="label">Spawn Player</div>
+          <span class="hint">Só 1</span>
+        </div>
+      </div>
+      <div class="tool" data-tool="spawn_monster">
+        <div class="icon" style="background:#555;color:#ff2222;">M</div>
+        <div>
+          <div class="label">Spawn Slendytubby</div>
+          <span class="hint">Só 1</span>
+        </div>
+      </div>
+
+      <div class="eraser-hint">
+        🖱 <b>Clique esquerdo</b>: pintar<br>
+        🖱 <b>Clique direito</b>: apagar<br>
+        🖱 <b>Arrastar</b>: pintar em série
+      </div>
+    </aside>
+
+    <!-- STAGE -->
+    <section class="stage">
+      <div class="grid-wrap">
+        <canvas id="gridCanvas" width="640" height="640"></canvas>
+      </div>
+      <div class="stage-info">
+        Grade: <b>20 × 20</b> · Ferramenta: <b id="currentToolLabel">Chão</b> ·
+        <span id="counts"></span>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="core.js"></script>
+<script>
+(function () {
+  'use strict';
+  const Core = window.CustardCore;
+
+  /* ---------- Guard: precisa estar logado ---------- */
+  if (!Core.getCurrentUser()) {
+    alert('Faça login antes de entrar no Studio.');
+    window.location.href = 'index.html';
+    return;
+  }
+
+  /* ---------- Config ---------- */
+  const SIZE = 20;
+  const CELL = 32; // 20 * 32 = 640
+  const canvas = document.getElementById('gridCanvas');
+  const ctx = canvas.getContext('2d');
+  const gameNameInput = document.getElementById('gameName');
+  const currentToolLabel = document.getElementById('currentToolLabel');
+  const countsEl = document.getElementById('counts');
+  const toastEl = document.getElementById('toast');
+
+  /* ---------- Estado do Grid ---------- */
+  // Inicializa vazio (chão) e mura a borda
+  let grid = [];
+  for (let y = 0; y < SIZE; y++) {
+    const row = [];
+    for (let x = 0; x < SIZE; x++) {
+      if (x === 0 || y === 0 || x === SIZE - 1 || y === SIZE - 1) row.push('wall');
+      else row.push('floor');
+    }
+    grid.push(row);
+  }
+
+  let currentTool = 'floor';
+  let isPainting = false;
+  let paintValue = 'floor'; // valor a aplicar no drag
+
+  const TOOL_LABEL = {
+    floor: 'Chão', wall: 'Parede', custard: 'Creme de Aveia',
+    spawn_player: 'Spawn Player', spawn_monster: 'Spawn Slendytubby'
+  };
+
+  /* ---------- Toast ---------- */
+  let toastTimer = null;
+  function toast(msg, ok) {
+    toastEl.textContent = msg;
+    toastEl.classList.toggle('ok', !!ok);
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
+  }
+
+  /* ---------- Seleção de ferramenta ---------- */
+  document.querySelectorAll('.tool').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.tool').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      currentTool = el.dataset.tool;
+      currentToolLabel.textContent = TOOL_LABEL[currentTool];
+    });
+  });
+  // ativa o primeiro por padrão
+  document.querySelector('.tool[data-tool="floor"]').classList.add('active');
+
+  /* ---------- Contagem de elementos ---------- */
+  function countElements() {
+    let custards = 0, player = 0, monster = 0, walls = 0, floors = 0;
+    for (let y = 0; y < SIZE; y++) {
+      for (let x = 0; x < SIZE; x++) {
+        const v = grid[y][x];
+        if (v === 'custard') custards++;
+        else if (v === 'spawn_player') player++;
+        else if (v === 'spawn_monster') monster++;
+        else if (v === 'wall') walls++;
+        else floors++;
+      }
+    }
+    countsEl.innerHTML =
+      `🍮 ${custards} · 👤 ${player} · 👹 ${monster} · 🧱 ${walls}`;
+  }
+
+  /* ---------- Desenho ---------- */
+  function drawCell(x, y) {
+    const v = grid[y][x];
+    const px = x * CELL, py = y * CELL;
+
+    // fundo base
+    if (v === 'floor') {
+      ctx.fillStyle = '#1a1a26';
+      ctx.fillRect(px, py, CELL, CELL);
+      ctx.strokeStyle = 'rgba(123,47,190,0.12)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(px + 0.5, py + 0.5, CELL - 1, CELL - 1);
+    } else if (v === 'wall') {
+      ctx.fillStyle = '#6a6a7a';
+      ctx.fillRect(px, py, CELL, CELL);
+      ctx.strokeStyle = '#3a3a48';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(px + 1, py + 1, CELL - 2, CELL - 2);
+      // detalhe sombrio
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      ctx.fillRect(px + 4, py + CELL - 8, CELL - 8, 4);
+    } else if (v === 'custard') {
+      ctx.fillStyle = '#1a1a26';
+      ctx.fillRect(px, py, CELL, CELL);
+      // bolinha rosa (creme de aveia)
+      ctx.fillStyle = '#ff9ed0';
+      ctx.beginPath();
+      ctx.arc(px + CELL/2, py + CELL/2, CELL * 0.32, 0, Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = '#b03a78';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      // brilho
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.beginPath();
+      ctx.arc(px + CELL/2 - 4, py + CELL/2 - 4, 3, 0, Math.PI*2);
+      ctx.fill();
+    } else if (v === 'spawn_player') {
+      ctx.fillStyle = '#1a1a26';
+      ctx.fillRect(px, py, CELL, CELL);
+      ctx.fillStyle = '#7b2fbe';
+      ctx.fillRect(px + 4, py + 4, CELL - 8, CELL - 8);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 18px VT323, monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('P', px + CELL/2, py + CELL/2 + 1);
+    } else if (v === 'spawn_monster') {
+      ctx.fillStyle = '#1a1a26';
+      ctx.fillRect(px, py, CELL, CELL);
+      ctx.fillStyle = '#555';
+      ctx.fillRect(px + 4, py + 4, CELL - 8, CELL - 8);
+      ctx.fillStyle = '#ff2222';
+      ctx.font = 'bold 18px VT323, monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('M', px + CELL/2, py + CELL/2 + 1);
+    }
+  }
+
+  function drawGrid() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let y = 0; y < SIZE; y++) {
+      for (let x = 0; x < SIZE; x++) drawCell(x, y);
+    }
+    // leve vinheta interna no canvas
+    const g = ctx.createRadialGradient(
+      canvas.width/2, canvas.height/2, canvas.width * 0.3,
+      canvas.width/2, canvas.height/2, canvas.width * 0.7
+    );
+    g.addColorStop(0, 'rgba(0,0,0,0)');
+    g.addColorStop(1, 'rgba(0,0,0,0.35)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  /* ---------- Pintura ---------- */
+  function getCellFromEvent(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const px = (e.clientX - rect.left) * scaleX;
+    const py = (e.clientY - rect.top) * scaleY;
+    const x = Math.floor(px / CELL);
+    const y = Math.floor(py / CELL);
+    if (x < 0 || y < 0 || x >= SIZE || y >= SIZE) return null;
+    return { x, y };
+  }
+
+  function paintCell(x, y, value) {
+    const current = grid[y][x];
+
+    // Regras de spawn único
+    if (value === 'spawn_player' || value === 'spawn_monster') {
+      if (current === value) return false;
+      // remove spawn do mesmo tipo em outro lugar
+      for (let yy = 0; yy < SIZE; yy++) {
+        for (let xx = 0; xx < SIZE; xx++) {
+          if (grid[yy][xx] === value) grid[yy][xx] = 'floor';
+        }
+      }
+    }
+
+    if (current === value) return false;
+    grid[y][x] = value;
+    return true;
+  }
+
+  function handlePaint(e) {
+    const cell = getCellFromEvent(e);
+    if (!cell) return;
+    const value = e.button === 2 ? 'floor' : paintValue;
+    const changed = paintCell(cell.x, cell.y, value);
+    if (changed) {
+      drawCell(cell.x, cell.y);
+      countElements();
+      redrawVinette(); // redesenha só a vinheta por cima
+    }
+  }
+
+  // A vinheta é sobrescrita ao redesenhar célula; refaz o overlay
+  function redrawVinette() {
+    const g = ctx.createRadialGradient(
+      canvas.width/2, canvas.height/2, canvas.width * 0.3,
+      canvas.width/2, canvas.height/2, canvas.width * 0.7
+    );
+    g.addColorStop(0, 'rgba(0,0,0,0)');
+    g.addColorStop(1, 'rgba(0,0,0,0.35)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+  canvas.addEventListener('mousedown', (e) => {
+    if (e.button !== 0 && e.button !== 2) return;
+    isPainting = true;
+    // define o valor conforme ferramenta (right-click sempre apaga)
+    paintValue = currentTool;
+    handlePaint(e);
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    if (!isPainting) return;
+    // só pinta com o botão apertado
+    if (e.buttons === 0) { isPainting = false; return; }
+    handlePaint(e);
+  });
+
+  window.addEventListener('mouseup', () => { isPainting = false; });
+
+  /* ---------- Ações da topbar ---------- */
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    if (!confirm('Limpar todo o mapa? (mantém o chão)')) return;
+    for (let y = 0; y < SIZE; y++) {
+      for (let x = 0; x < SIZE; x++) {
+        grid[y][x] = (x === 0 || y === 0 || x === SIZE - 1 || y === SIZE - 1) ? 'wall' : 'floor';
+      }
+    }
+    drawGrid();
+    countElements();
+    toast('Mapa limpo.', true);
+  });
+
+  document.getElementById('fillBtn').addEventListener('click', () => {
+    for (let x = 0; x < SIZE; x++) {
+      grid[0][x] = 'wall';
+      grid[SIZE - 1][x] = 'wall';
+    }
+    for (let y = 0; y < SIZE; y++) {
+      grid[y][0] = 'wall';
+      grid[y][SIZE - 1] = 'wall';
+    }
+    drawGrid();
+    countElements();
+    toast('Bordas muradas.', true);
+  });
+
+  document.getElementById('backBtn').addEventListener('click', () => {
+    window.location.href = 'index.html';
+  });
+
+  document.getElementById('publishBtn').addEventListener('click', () => {
+    const name = gameNameInput.value.trim();
+    if (!name) { toast('Digite um nome para o jogo.', false); gameNameInput.focus(); return; }
+
+    // valida requisitos mínimos
+    const flat = grid.flat();
+    if (!flat.includes('spawn_player')) { toast('Adicione 1 Spawn Player.', false); return; }
+    if (!flat.includes('spawn_monster')) { toast('Adicione 1 Spawn Slendytubby.', false); return; }
+    if (!flat.includes('custard')) { toast('Adicione ao menos 1 Creme de Aveia.', false); return; }
+
+    const res = Core.publishGame({ name, grid, size: SIZE });
+    if (!res.ok) { toast(res.error, false); return; }
+
+    toast('Jogo publicado! Redirecionando...', true);
+    setTimeout(() => { window.location.href = 'index.html'; }, 900);
+  });
+
+  /* ---------- Init ---------- */
+  drawGrid();
+  countElements();
+  gameNameInput.focus();
+})();
+</script>
+</body>
+</html>
