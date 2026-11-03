@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CustardBricks — V-01 Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: #000; color: #d8d0e0;
+    font-family: 'VT323', monospace; font-size: 18px;
+    overflow: hidden;
+  }
+  canvas#game {
+    display: block; margin: 0 auto;
+    background: #050508;
+    image-rendering: pixelated;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.85) 100%);
+    z-index: 9990;
+  }
+  body::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(to bottom,
+      rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px,
+      transparent 1px, transparent 3px);
+    z-index: 9991; mix-blend-mode: overlay;
+    animation: flicker 0.15s infinite;
+  }
+  @keyframes flicker { 0%{opacity:.9}50%{opacity:1}100%{opacity:.85} }
+
+  .hud {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 100;
+    padding: 14px 20px;
+  }
+  .hud-top {
+    display: flex; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+  }
+  .hud-box {
+    background: rgba(10,10,16,0.8);
+    border: 2px solid #2a2a3a;
+    padding: 5px 14px;
+    font-size: 20px;
+    letter-spacing: 1px;
+    text-shadow: 0 0 6px #000;
+  }
+  .hud-title { color: #7b2fbe; }
+  .hud-custards { color: #ff9ed0; }
+  .hud-engine {
+    position: fixed; bottom: 14px; right: 18px;
+    color: #4a4a5a; font-size: 14px;
+    letter-spacing: 2px;
+    z-index: 100; pointer-events: none;
+  }
+  .hud-esc {
+    position: fixed; bottom: 14px; left: 18px;
+    color: #4a4a5a; font-size: 14px;
+    letter-spacing: 2px;
+  }
+  .hud-dist {
+    position: fixed; bottom: 60px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10,10,16,0.85);
+    border: 2px solid #2a2a3a;
+    padding: 4px 16px;
+    font-size: 18px;
+    letter-spacing: 2px;
+  }
+  .hud-dist.safe { color: #3fa14b; }
+  .hud-dist.danger { color: #ff2222; animation: pulse 0.4s infinite alternate; }
+  @keyframes pulse { from{opacity:.7}to{opacity:1} }
+
+  .static-overlay {
+    position: fixed; inset: 0; pointer-events: none;
+    z-index: 9500; opacity: 0;
+    background-image:
+      repeating-radial-gradient(circle at 30% 40%, rgba(255,255,255,0.08) 0, transparent 2px),
+      repeating-radial-gradient(circle at 70% 60%, rgba(255,255,255,0.05) 0, transparent 3px);
+    background-size: 4px 4px, 6px 6px;
+    animation: staticMove 0.12s steps(3) infinite;
+    mix-blend-mode: screen;
+    transition: opacity 0.2s;
+  }
+  @keyframes staticMove {
+    0% { background-position: 0 0, 0 0; }
+    33% { background-position: 2px 1px, -1px 2px; }
+    66% { background-position: -1px 2px, 2px -1px; }
+    100% { background-position: 1px -1px, -2px 1px; }
+  }
+
+  .jumpscare {
+    position: fixed; inset: 0;
+    background: #ff0000;
+    opacity: 0; pointer-events: none;
+    z-index: 9800;
+    transition: opacity 0.05s;
+  }
+  .jumpscare.flash { opacity: 0.85; }
+
+  .overlay {
+    position: fixed; inset: 0;
+    display: none; align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px;
+    background: rgba(0,0,0,0.9);
+    z-index: 5000; text-align: center; padding: 20px;
+  }
+  .overlay.show { display: flex; }
+  .overlay h1 {
+    font-size: 64px; letter-spacing: 4px; margin: 0;
+  }
+  .overlay.lose h1 {
+    color: #ff2222;
+    text-shadow: 0 0 20px #ff2222;
+    animation: shake 0.5s infinite;
+  }
+  @keyframes shake {
+    0%,100%{transform:translate(0,0)}
+    25%{transform:translate(-3px,2px)}
+    50%{transform:translate(3px,-2px)}
+    75%{transform:translate(-2px,-2px)}
+  }
+  .overlay.win h1 {
+    color: #e8d347;
+    text-shadow: 0 0 20px #e8d347;
+  }
+  .overlay p { font-size: 22px; color: #8a839a; max-width: 560px; margin: 0; }
+  .overlay .reward {
+    font-size: 34px; color: #ff9ed0;
+    text-shadow: 0 0 12px #b03a78;
+  }
+  .overlay .btn {
+    font-family: 'VT323', monospace; font-size: 24px;
+    padding: 10px 28px;
+    background: #12121c; color: #d8d0e0;
+    border: 2px solid #ff2222;
+    cursor: pointer; letter-spacing: 2px;
+    transition: all 0.15s;
+  }
+  .overlay .btn:hover { background: #a01515; box-shadow: 0 0 18px #ff2222; }
+
+  .hint {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 4000;
+    background: rgba(10,10,16,0.95);
+    border: 2px solid #ff2222;
+    padding: 24px 32px; text-align: center;
+    box-shadow: 0 0 40px rgba(255,34,34,0.5);
+    transition: opacity 0.4s;
+  }
+  .hint.hidden { opacity: 0; pointer-events: none; }
+  .hint h2 { color: #ff2222; margin: 0 0 10px; letter-spacing: 3px; }
+  .hint p { margin: 4px 0; color: #8a839a; }
+  .hint .key {
+    display: inline-block; padding: 2px 8px;
+    border: 1px solid #2a2a3a; background: #06060a;
+    color: #d8d0e0; margin: 0 2px; font-size: 18px;
+  }
+  .hint b { color: #ff2222; }
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<div class="static-overlay" id="staticOverlay"></div>
+<div class="jumpscare" id="jumpscare"></div>
+
+<div class="hud" id="hud" style="display:none;">
+  <div class="hud-top">
+    <div class="hud-box hud-title" id="hudGameName">—</div>
+    <div class="hud-box hud-custards">🍮 <span id="hudScore">0</span> / <span id="hudTotal">0</span></div>
+  </div>
+</div>
+<div class="hud-dist" id="hudDist" style="display:none;">—</div>
+<div class="hud-esc" id="hudEsc" style="display:none;">ESC para sair</div>
+<div class="hud-engine">POWERED BY V-01</div>
+
+<div class="hint" id="hint">
+  <h2>V-01 ENGINE</h2>
+  <p>Mova com <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span></p>
+  <p>Colete os <b style="color:#ff9ed0;">custards</b>, evite o <b>monstro</b></p>
+  <p style="margin-top:14px;color:#d8d0e0;" id="hintExtra">Pressione qualquer tecla para começar</p>
+</div>
+
+<div class="overlay" id="overlay">
+  <h1 id="overlayTitle">—</h1>
+  <p id="overlayMsg">—</p>
+  <div class="reward" id="overlayReward"></div>
+  <button class="btn" id="overlayBtn">VOLTAR AO LOBBY</button>
+</div>
+
+<script src="core.js"></script>
+<script>
+/* ============================================================
+   V-01 ENGINE — Runtime
+   ============================================================ */
+(function () {
+  'use strict';
+
+  const params = new URLSearchParams(location.search);
+  const isTest = params.get('test') === '1';
+
+  /* ---------- Load game ---------- */
+  let game;
+  if (isTest) {
+    try {
+      game = JSON.parse(sessionStorage.getItem('cb_test_game') || 'null');
+    } catch (e) { game = null; }
+    if (!game) { alert('Nenhum jogo de teste.'); location.href = 'index.html'; return; }
+  } else {
+    if (!CORE.getCurrentUser()) { location.href = 'index.html'; return; }
+    game = CORE.getSelectedGame();
+    if (!game) { alert('Nenhum jogo selecionado.'); location.href = 'index.html'; return; }
+    CORE.incrementPlays(game.id);
+  }
+
+  /* ---------- Canvas setup ---------- */
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  /* ---------- World state ---------- */
+  const workspace = [];
+  let player = null;
+  let totalCoins = 0;
+  let coinsCollected = 0;
+  let hasGoal = false;
+  let state = 'waiting'; // waiting | playing | won | lost
+  let camera = { x: 0, y: 0 };
+  let lastTime = 0;
+  const keys = {};
+
+  /* ---------- HUD ---------- */
+  const hud = document.getElementById('hud');
+  const hudGameName = document.getElementById('hudGameName');
+  const hudScore = document.getElementById('hudScore');
+  const hudTotal = document.getElementById('hudTotal');
+  const hudDist = document.getElementById('hudDist');
+  const hudEsc = document.getElementById('hudEsc');
+  const hintEl = document.getElementById('hint');
+  const hintExtra = document.getElementById('hintExtra');
+  const staticOverlay = document.getElementById('staticOverlay');
+  const jumpscare = document.getElementById('jumpscare');
+  const overlay = document.getElementById('overlay');
+  const overlayTitle = document.getElementById('overlayTitle');
+  const overlayMsg = document.getElementById('overlayMsg');
+  const overlayReward = document.getElementById('overlayReward');
+  const overlayBtn = document.getElementById('overlayBtn');
+
+  overlayBtn.addEventListener('click', () => {
+    if (isTest) { window.location.href = 'studio.html'; }
+    else { window.location.href = 'index.html'; }
+  });
+
+  /* ---------- V-01 API ---------- */
+  const V = {};
+
+  V.Vector2 = {
+    new: (x = 0, y = 0) => ({ x, y }),
+    zero: { x: 0, y: 0 }
+  };
+
+  V.Color3 = {
+    new: (r = 0, g = 0, b = 0) => ({
+      r, g, b,
+      hex: '#' + [r, g, b].map(c => Math.round(Math.max(0, Math.min(1, c)) * 255).toString(16).padStart(2, '0')).join('')
+    }),
+    fromRGB: (r = 0, g = 0, b = 0) => ({
+      r: r / 255, g: g / 255, b: b / 255,
+      hex: '#' + [r, g, b].map(c => Math.round(Math.max(0, Math.min(255, c))).toString(16).padStart(2, '0')).join('')
+    })
+  };
+
+  /* ---------- Instance classes ---------- */
+  class VInstance {
+    constructor(type) {
+      this.ClassName = type;
+      this.Name = type;
+      this.Position = { x: 0, y: 0 };
+      this.Size = { x: 20, y: 20 };
+      this._color = '#888';
+      this.Transparency = 0;
+      this.CanCollide = true;
+      this.Anchored = true;
+      this.Speed = 2;
+      this._destroyed = false;
+      this._touched = null;
+      this._parent = null;
+    }
+    get Color() { return this._color; }
+    set Color(v) {
+      if (typeof v === 'string') this._color = v;
+      else if (v && typeof v === 'object' && 'hex' in v) this._color = v.hex;
+      else this._color = '#888';
+    }
+    get Parent() { return this._parent; }
+    set Parent(p) {
+      if (this._parent && Array.isArray(this._parent)) {
+        const i = this._parent.indexOf(this);
+        if (i >= 0) this._parent.splice(i, 1);
+      }
+      this._parent = p;
+      if (Array.isArray(p)) p.push(this);
+    }
+    get Touched() { return this._touched; }
+    set Touched(fn) { this._touched = fn; }
+    Destroy() {
+      this._destroyed = true;
+      if (this._parent && Array.isArray(this._parent)) {
+        const i = this._parent.indexOf(this);
+        if (i >= 0) this._parent.splice(i, 1);
+      }
+    }
+  }
+
+  V.Instance = {
+    new: function (type) {
+      let inst;
+      switch (type) {
+        case 'Part':
+          inst = new VInstance('Part');
+          inst.Color = '#4a4a5a';
+          inst.Size = { x: 40, y: 40 };
+          break;
+        case 'SpawnPoint':
+          inst = new VInstance('SpawnPoint');
+          inst.Color = '#3fa14b';
+          inst.Size = { x: 40, y: 40 };
+          break;
+        case 'Coin':
+          inst = new VInstance('Coin');
+          inst.Color = '#ff9ed0';
+          inst.Size = { x: 24, y: 24 };
+          inst.CanCollide = false;
+          break;
+        case 'Monster':
+          inst = new VInstance('Monster');
+          inst.Color = '#444';
+          inst.Size = { x: 44, y: 44 };
+          inst.CanCollide = false;
+          break;
+        case 'Goal':
+          inst = new VInstance('Goal');
+          inst.Color = '#e8d347';
+          inst.Size = { x: 44, y: 44 };
+          inst.CanCollide = false;
+          break;
+        default:
+          inst = new VInstance(type);
+      }
+      return inst;
+    }
+  };
+
+  /* ---------- Player ---------- */
+  const avatar = CORE.getCurrentUser() ? CORE.getAvatar() : { body: 'body_purple', face: 'face_normal' };
+  const avatarBody = avatar.body;
+
+  const playerObj = new VInstance('Player');
+  playerObj.Size = { x: 30, y: 30 };
+  playerObj.CanCollide = false;
+  playerObj.Kill = function () {
+    triggerLose();
+  };
+  player = playerObj;
+
+  /* ---------- game object (API) ---------- */
+  const gameAPI = {
+    Workspace: workspace,
+    Players: {
+      LocalPlayer: playerObj
+    },
+    Lighting: {
+      Ambient: '#0a0a10',
+      Brightness: 1
+    }
+  };
+
+  /* ---------- Execute script ---------- */
+  try {
+    const fn = new Function(
+      'Vector2', 'Color3', 'Instance', 'game', 'print', 'workspace',
+      game.script || ''
+    );
+    fn(
+      V.Vector2, V.Color3, V.Instance, gameAPI,
+      (...a) => console.log('[V-01]', ...a),
+      workspace
+    );
+  } catch (e) {
+    console.error('Script error:', e);
+    alert('Erro no script: ' + e.message);
+    if (isTest) { location.href = 'studio.html'; return; }
+  }
+
+  /* ---------- Setup world ---------- */
+  const spawnPoint = workspace.find(o => o.ClassName === 'SpawnPoint');
+  if (spawnPoint) {
+    player.Position.x = spawnPoint.Position.x;
+    player.Position.y = spawnPoint.Position.y;
+  } else {
+    player.Position.x = 100;
+    player.Position.y = 100;
+  }
+  workspace.push(player);
+
+  totalCoins = workspace.filter(o => o.ClassName === 'Coin').length;
+  hasGoal = workspace.some(o => o.ClassName === 'Goal');
+
+  hudGameName.textContent = game.name || 'V-01';
+  hudTotal.textContent = totalCoins;
+
+  // Adjust hint
+  if (totalCoins === 0 && !hasGoal) {
+    hintExtra.textContent = 'Sem objetivo — explore livremente. Pressione tecla para começar.';
+  } else if (hasGoal) {
+    hintExtra.textContent = 'Encontre o ★ Goal. Pressione tecla para começar.';
+  } else {
+    hintExtra.textContent = 'Colete todos os custards. Pressione tecla para começar.';
+  }
+
+  /* ---------- Input ---------- */
+  window.addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) {
+      e.preventDefault();
+    }
+    keys[k] = true;
+    if (state === 'waiting') {
+      startGame();
+    }
+    if (k === 'escape' && state !== 'waiting') {
+      if (isTest) location.href = 'studio.html';
+      else location.href = 'index.html';
+    }
+  });
+  window.addEventListener('keyup', e => {
+    keys[e.key.toLowerCase()] = false;
+  });
+
+  function startGame() {
+    state = 'playing';
+    hintEl.classList.add('hidden');
+    hud.style.display = 'block';
+    hudDist.style.display = 'block';
+    hudEsc.style.display = 'block';
+    lastTime = performance.now();
+    requestAnimationFrame(loop);
+  }
+
+  /* ---------- Collision ---------- */
+  function collidesAt(x, y) {
+    const psize = player.Size;
+    for (const obj of workspace) {
+      if (obj._destroyed || obj === player) continue;
+      if (!obj.CanCollide) continue;
+      if (obj.ClassName !== 'Part') continue;
+      if (Math.abs(x - obj.Position.x) < (psize.x + obj.Size.x) / 2 &&
+          Math.abs(y - obj.Position.y) < (psize.y + obj.Size.y) / 2) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /* ---------- Update ---------- */
+  function updatePlayer(dt) {
+    const speed = 220;
+    let dx = 0, dy = 0;
+    if (keys['w'] || keys['arrowup']) dy -= 1;
+    if (keys['s'] || keys['arrowdown']) dy += 1;
+    if (keys['a'] || keys['arrowleft']) dx -= 1;
+    if (keys['d'] || keys['arrowright']) dx += 1;
+    if (dx || dy) {
+      const len = Math.hypot(dx, dy);
+      dx /= len; dy /= len;
+      const step = speed * dt;
+      const nx = player.Position.x + dx * step;
+      if (!collidesAt(nx, player.Position.y)) player.Position.x = nx;
+      const ny = player.Position.y + dy * step;
+      if (!collidesAt(player.Position.x, ny)) player.Position.y = ny;
+    }
+  }
+
+  let nearestMonsterDist = Infinity;
+  function updateMonsters(dt) {
+    nearestMonsterDist = Infinity;
+    for (const obj of workspace) {
+      if (obj._destroyed || obj.ClassName !== 'Monster') continue;
+      const dx = player.Position.x - obj.Position.x;
+      const dy = player.Position.y - obj.Position.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < nearestMonsterDist) nearestMonsterDist = dist;
+      if (dist > 0.1) {
+        const mstep = (obj.Speed || 2) * 60 * dt;
+        obj.Position.x += (dx / dist) * mstep;
+        obj.Position.y += (dy / dist) * mstep;
+      }
+      // touch = lose
+      if (dist < (player.Size.x + obj.Size.x) * 0.35) {
+        triggerLose();
+        return;
+      }
+    }
+  }
+
+  function updateTouches() {
+    const px = player.Position.x, py = player.Position.y;
+    const psize = player.Size;
+    for (let i = workspace.length - 1; i >= 0; i--) {
+      const obj = workspace[i];
+      if (obj._destroyed || obj === player) continue;
+      if (obj.ClassName === 'Part' || obj.ClassName === 'Coin' || obj.ClassName === 'Goal') {
+        const dx = Math.abs(px - obj.Position.x);
+        const dy = Math.abs(py - obj.Position.y);
+        const hw = (psize.x + obj.Size.x) / 2;
+        const hh = (psize.y + obj.Size.y) / 2;
+        if (dx < hw && dy < hh) {
+          // fire Touched
+          if (obj._touched && typeof obj._touched === 'function') {
+            try { obj._touched(player); } catch (e) { console.warn(e); }
+          }
+          // built-in behavior
+          if (obj.ClassName === 'Coin') {
+            coinsCollected++;
+            hudScore.textContent = coinsCollected;
+            obj.Destroy();
+            if (!hasGoal && totalCoins > 0 && coinsCollected >= totalCoins) {
+              triggerWin();
+            }
+          }
+          if (obj.ClassName === 'Goal') {
+            triggerWin();
+          }
+        }
+      }
+    }
+  }
+
+  function updateAtmosphere() {
+    if (nearestMonsterDist === Infinity) {
+      staticOverlay.style.opacity = '0';
+      hudDist.textContent = '—';
+      hudDist.classList.remove('danger', 'safe');
+      return;
+    }
+    const d = nearestMonsterDist;
+    if (d < 200) {
+      const op = Math.min(0.8, (200 - d) / 200);
+      staticOverlay.style.opacity = op.toFixed(2);
+    } else {
+      staticOverlay.style.opacity = '0';
+    }
+    hudDist.textContent = 'DISTÂNCIA: ' + (d / 30).toFixed(1) + 'm';
+    hudDist.classList.remove('danger', 'safe');
+    if (d < 120) hudDist.classList.add('danger');
+    else if (d > 250) hudDist.classList.add('safe');
+  }
+
+  /* ---------- Render ---------- */
+  function drawTeletubby(x, y, size, bodyColor, isMonster) {
+    // Body
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Ears
+    ctx.fillStyle = bodyColor;
+    ctx.beginPath();
+    ctx.arc(x - size * 0.35, y - size * 0.35, size * 0.12, 0, Math.PI * 2);
+    ctx.arc(x + size * 0.35, y - size * 0.35, size * 0.12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Face
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.beginPath();
+    ctx.arc(x, y + size * 0.08, size * 0.32, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eyes
+    if (isMonster) {
+      ctx.shadowColor = '#ff0000';
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = '#ff0000';
+    } else {
+      ctx.fillStyle = '#000';
+    }
+    ctx.beginPath();
+    ctx.arc(x - size * 0.13, y, size * 0.06, 0, Math.PI * 2);
+    ctx.arc(x + size * 0.13, y, size * 0.06, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Mouth
+    ctx.strokeStyle = isMonster ? '#a00' : '#000';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y + size * 0.16, size * 0.12, 0.15 * Math.PI, 0.85 * Math.PI);
+    ctx.stroke();
+
+    // Antenna
+    ctx.strokeStyle = isMonster ? '#333' : '#ddd';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x, y - size / 2);
+    ctx.lineTo(x, y - size / 2 - size * 0.3);
+    ctx.stroke();
+    ctx.fillStyle = isMonster ? '#333' : '#ddd';
+    ctx.beginPath();
+    ctx.arc(x, y - size / 2 - size * 0.35, size * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawObject(obj) {
+    const { x, y } = obj.Position;
+    const w = obj.Size.x, h = obj.Size.y;
+    ctx.save();
+    ctx.globalAlpha = 1 - (obj.Transparency || 0);
+
+    if (obj.ClassName === 'Part') {
+      ctx.fillStyle = obj.Color;
+      ctx.fillRect(x - w / 2, y - h / 2, w, h);
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x - w / 2, y - h / 2, w, h);
+    }
+    else if (obj.ClassName === 'Coin') {
+      // pulsing pink coin
+      const pulse = 0.85 + Math.sin(performance.now() * 0.005 + x + y) * 0.15;
+      ctx.fillStyle = obj.Color;
+      ctx.shadowColor = obj.Color;
+      ctx.shadowBlur = 10 * pulse;
+      ctx.beginPath();
+      ctx.arc(x, y, w / 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = '#b03a78';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    else if (obj.ClassName === 'Goal') {
+      ctx.fillStyle = obj.Color;
+      ctx.shadowColor = obj.Color;
+      ctx.shadowBlur = 20;
+      ctx.beginPath();
+      ctx.arc(x, y, w / 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // star
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 20px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('★', x, y);
+    }
+    else if (obj.ClassName === 'SpawnPoint') {
+      ctx.fillStyle = obj.Color;
+      ctx.globalAlpha *= 0.35;
+      ctx.fillRect(x - w / 2, y - h / 2, w, h);
+    }
+    else if (obj.ClassName === 'Monster') {
+      drawTeletubby(x, y, w, obj.Color || '#444', true);
+    }
+    else if (obj.ClassName === 'Player') {
+      // user avatar body color
+      const bodyColor = (CORE.getMarketItem && CORE.getMarketItem(avatarBody))
+        ? (CORE.getMarketItem(avatarBody).color || '#7b2fbe') : '#7b2fbe';
+      drawTeletubby(x, y, w, bodyColor, false);
+    }
+    ctx.restore();
+  }
+
+  function render() {
+    const cw = canvas.width, ch = canvas.height;
+    // Background
+    ctx.fillStyle = '#050508';
+    ctx.fillRect(0, 0, cw, ch);
+
+    // Camera
+    camera.x = player.Position.x - cw / 2;
+    camera.y = player.Position.y - ch / 2;
+
+    ctx.save();
+    ctx.translate(-camera.x, -camera.y);
+
+    // Draw world
+    for (const obj of workspace) {
+      if (obj._destroyed) continue;
+      drawObject(obj);
+    }
+
+    ctx.restore();
+  }
+
+  /* ---------- Game loop ---------- */
+  function loop(timestamp) {
+    if (state !== 'playing') return;
+    if (!lastTime) lastTime = timestamp;
+    const dt = Math.min(0.05, (timestamp - lastTime) / 1000);
+    lastTime = timestamp;
+
+    updatePlayer(dt);
+    updateMonsters(dt);
+    updateTouches();
+    updateAtmosphere();
+    render();
+
+    if (state === 'playing') requestAnimationFrame(loop);
+  }
+
+  /* ---------- End states ---------- */
+  function triggerLose() {
+    if (state !== 'playing') return;
+    state = 'lost';
+    jumpscare.classList.add('flash');
+    setTimeout(() => jumpscare.classList.remove('flash'), 100);
+    setTimeout(() => jumpscare.classList.add('flash'), 180);
+    setTimeout(() => jumpscare.classList.remove('flash'), 260);
+
+    setTimeout(() => {
+      overlay.className = 'overlay lose show';
+      overlayTitle.textContent = 'VOCÊ MORREU';
+      overlayMsg.textContent = 'O Slendytubby te encontrou...';
+      overlayReward.textContent = '';
+    }, 500);
+  }
+
+  function triggerWin() {
+    if (state !== 'playing') return;
+    state = 'won';
+    const reward = coinsCollected;
+    if (!isTest && reward > 0) {
+      CORE.addCustards(reward, 'game:' + game.id);
+    }
+    overlay.className = 'overlay win show';
+    overlayTitle.textContent = 'VOCÊ VENCEU';
+    overlayMsg.textContent = 'Todos os objetivos concluídos.';
+    if (isTest) {
+      overlayReward.textContent = '(modo teste — sem recompensa)';
+    } else {
+      overlayReward.textContent = reward > 0 ? '+' + reward + ' Custards salvos!' : 'Sem custards coletados';
+    }
+  }
+
+  /* ---------- Initial render ---------- */
+  render();
+})();
+</script>
+</body>
+</html>
