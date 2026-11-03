@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8"><title>Mercado — CustardBricks</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head><body>
+<nav id="topnav" class="topnav"></nav>
+<main class="page">
+  <h1>MERCADO</h1>
+  <div class="toolbar">
+    <div class="filter-tabs">
+      <button class="filter-tab active" data-cat="body">Corpos</button>
+      <button class="filter-tab" data-cat="face">Rostos</button>
+      <button class="filter-tab" data-cat="accessory">Acessórios</button>
+      <button class="filter-tab" data-cat="effect">Efeitos</button>
+    </div>
+  </div>
+  <div class="market-grid" id="grid"></div>
+</main>
+<script src="core.js"></script>
+<script src="shared.js"></script>
+<script>
+(function () {
+  let cat = 'body';
+  function render() {
+    const items = CORE.getMarketItems().filter(i => i.category === cat);
+    const grid = document.getElementById('grid');
+    grid.innerHTML = items.map(item => {
+      const iconHTML = item.icon === 'swatch' ? `<span class="swatch" style="background:${item.color}"></span>` : `<span class="item-icon">${item.icon}</span>`;
+      const btn = item.owned ? `<button class="buy-btn owned" disabled>✓ COMPRADO</button>`
+        : item.price === 0 ? `<button class="buy-btn" data-id="${item.id}">GRÁTIS</button>`
+        : `<button class="buy-btn" data-id="${item.id}">COMPRAR • 💰${item.price}</button>`;
+      return `<div class="market-item ${item.owned?'owned':''}">
+        <span class="rarity ${item.rarity}">${item.rarity.toUpperCase()}</span>
+        ${iconHTML}
+        <h3>${escapeHTML(item.name)}</h3>
+        <div class="price">${item.price===0?'GRÁTIS':'💰 '+item.price}</div>
+        ${btn}
+      </div>`;
+    }).join('');
+    grid.querySelectorAll('.buy-btn[data-id]').forEach(b => b.onclick = () => {
+      const r = CORE.buyItem(b.dataset.id);
+      if (r.ok) { toast('Comprado!', true); render(); renderNav(); } else toast(r.error, false);
+    });
+  }
+  document.querySelectorAll('.filter-tab').forEach(t => t.onclick = () => {
+    document.querySelectorAll('.filter-tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active'); cat = t.dataset.cat; render();
+  });
+  render();
+})();
+</script>
+</body></html>
