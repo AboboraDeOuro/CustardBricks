@@ -3,28 +3,103 @@
 <meta charset="UTF-8"><title>CustardBricks — Home</title>
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="app.css">
+<style>
+/* Hero animado */
+.hero-v5{position:relative;min-height:380px;border:2px solid var(--border);background:#0a0612;overflow:hidden;margin-bottom:28px;display:flex;align-items:flex-end;padding:36px}
+.hero-v5::before{content:"";position:absolute;inset:0;background:
+  radial-gradient(circle at 20% 30%,rgba(255,34,34,.35),transparent 45%),
+  radial-gradient(circle at 80% 70%,rgba(123,47,190,.45),transparent 45%),
+  radial-gradient(circle at 50% 100%,rgba(63,161,75,.15),transparent 40%);
+  animation:heroPulse 8s ease-in-out infinite alternate}
+@keyframes heroPulse{0%{filter:brightness(1)}100%{filter:brightness(1.35)}}
+.hero-v5::after{content:"";position:absolute;inset:0;background:
+  repeating-linear-gradient(45deg,transparent 0,transparent 12px,rgba(255,34,34,.03) 12px,rgba(255,34,34,.03) 13px);pointer-events:none}
+.hero-content{position:relative;z-index:2;max-width:640px}
+.hero-eyebrow{display:inline-block;padding:3px 12px;background:rgba(255,34,34,.15);border:1px solid var(--red);color:var(--red);font-size:14px;letter-spacing:3px;margin-bottom:14px}
+.hero-v5 h2{font-size:52px;margin:0 0 10px;color:#fff;text-shadow:0 0 24px var(--red),0 0 48px var(--purple);letter-spacing:2px;line-height:1.05}
+.hero-v5 p{color:var(--text);font-size:20px;margin:0 0 22px;line-height:1.4;max-width:520px}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap}
+.hero-actions .btn{padding:12px 26px;font-size:22px}
+
+/* Stats bar */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:var(--border);border:2px solid var(--border);margin-bottom:32px}
+@media(max-width:720px){.stats-bar{grid-template-columns:repeat(2,1fr)}}
+.stat-cell{background:var(--bg2);padding:18px 20px;text-align:center;transition:.2s}
+.stat-cell:hover{background:var(--bg3)}
+.stat-num{font-size:34px;color:var(--red);text-shadow:0 0 12px var(--red-dark);letter-spacing:1px}
+.stat-lbl{font-size:14px;color:var(--text-dim);letter-spacing:2px;margin-top:2px}
+
+/* Section header */
+.sec-hd{display:flex;justify-content:space-between;align-items:center;margin:34px 0 16px;padding-left:12px;border-left:4px solid var(--red)}
+.sec-hd h2{font-size:26px;letter-spacing:2px;margin:0;color:var(--text)}
+.sec-hd .link{color:var(--purple);font-size:16px;cursor:pointer;letter-spacing:1px;transition:.15s}
+.sec-hd .link:hover{color:var(--red);text-shadow:0 0 6px var(--red)}
+
+/* Category badges */
+.cat-badge{display:inline-block;font-size:12px;padding:2px 9px;background:rgba(123,47,190,.2);border:1px solid var(--purple);color:var(--purple);letter-spacing:1px;margin-left:8px}
+
+/* Better game card */
+.game-card-v5{background:var(--bg2);border:2px solid var(--border);overflow:hidden;cursor:pointer;transition:.2s;position:relative;display:flex;flex-direction:column}
+.game-card-v5:hover{border-color:var(--red);transform:translateY(-4px);box-shadow:0 10px 30px rgba(255,34,34,.3)}
+.game-thumb-v5{height:140px;position:relative;overflow:hidden}
+.game-thumb-v5::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 30%,rgba(0,0,0,.6) 100%);pointer-events:none}
+.game-thumb-v5 .initial{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:78px;font-weight:bold;color:#fff;text-shadow:0 6px 20px rgba(0,0,0,.8);z-index:1}
+.game-info-v5{padding:14px 16px;flex:1;display:flex;flex-direction:column}
+.game-name-v5{color:var(--red);font-size:21px;margin:0 0 4px;letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.game-author-v5{color:var(--text-dim);font-size:14px;margin-bottom:8px}
+.game-meta-v5{display:flex;gap:12px;color:var(--text-dim);font-size:14px;margin-top:auto;align-items:center}
+.game-meta-v5 .stat{display:flex;align-items:center;gap:3px}
+.play-btn-v5{width:100%;padding:9px;background:var(--red-dark);border:none;border-top:2px solid var(--red);color:#fff;font-size:19px;letter-spacing:2px;cursor:pointer;transition:.15s;font-family:inherit}
+.game-card-v5:hover .play-btn-v5{background:var(--red);box-shadow:0 -4px 20px rgba(255,34,34,.4)}
+
+/* How it works */
+.how-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.how-card{background:var(--bg2);border:2px solid var(--border);padding:20px;transition:.15s}
+.how-card:hover{border-color:var(--purple)}
+.how-card .num{font-size:42px;color:var(--red);text-shadow:0 0 16px var(--red-dark);line-height:1}
+.how-card h4{margin:6px 0;color:var(--text);font-size:19px;letter-spacing:1px}
+.how-card p{margin:0;color:var(--text-dim);font-size:15px;line-height:1.4}
+</style>
 </head><body>
 <nav id="topnav" class="topnav"></nav>
 <main class="page">
-  <div id="authView" style="display:none;">
-    <div class="auth-card">
-      <h1 id="aTitle">ENTRAR</h1>
-      <p class="sub" id="aSub">Bem-vindo ao CustardBricks</p>
-      <div class="field"><label>Nick</label><input type="text" id="aUser" maxlength="20" placeholder="NooNoo"></div>
-      <div class="field" id="aEmailF" style="display:none;"><label>Email</label><input type="email" id="aEmail" maxlength="60"></div>
-      <div class="field"><label>Senha</label><input type="password" id="aPass" maxlength="32"></div>
-      <button class="btn primary" id="aBtn" style="width:100%;padding:12px;font-size:24px;margin-top:8px;">ENTRAR</button>
-      <div class="auth-msg" id="aMsg"></div>
-      <div class="auth-switch"><span id="aSwitchT">Sem conta?</span> <a id="aSwitchL">Criar conta</a></div>
-    </div>
+
+<div id="authView" style="display:none;">
+  <div class="auth-card">
+    <h1 id="aTitle">ENTRAR</h1>
+    <p class="sub" id="aSub">Bem-vindo ao CustardBricks</p>
+    <div class="field"><label>Nick</label><input type="text" id="aUser" maxlength="20" placeholder="NooNoo"></div>
+    <div class="field" id="aEmailF" style="display:none;"><label>Email</label><input type="email" id="aEmail" maxlength="60"></div>
+    <div class="field"><label>Senha</label><input type="password" id="aPass" maxlength="32"></div>
+    <button class="btn primary" id="aBtn" style="width:100%;padding:12px;font-size:24px;margin-top:8px;">ENTRAR</button>
+    <div class="auth-msg" id="aMsg"></div>
+    <div class="auth-switch"><span id="aSwitchT">Sem conta?</span> <a id="aSwitchL">Criar conta</a></div>
   </div>
-  <div id="homeView" style="display:none;">
-    <div class="hero" id="hero"></div>
-    <h2 class="sec">EM DESTAQUE</h2>
-    <div class="games-grid" id="featured"></div>
-    <h2 class="sec">RECENTES</h2>
-    <div class="games-grid" id="recent"></div>
+</div>
+
+<div id="homeView" style="display:none;">
+  <div class="hero-v5" id="hero"></div>
+
+  <div class="stats-bar" id="statsBar"></div>
+
+  <div class="sec-hd"><h2>🔥 EM DESTAQUE</h2><span class="link" onclick="location.href='descobrir.html'">Ver todos →</span></div>
+  <div class="games-grid" id="featured"></div>
+
+  <div class="sec-hd"><h2>🆕 RECENTES</h2><span class="link" onclick="location.href='descobrir.html'">Ver todos →</span></div>
+  <div class="games-grid" id="recent"></div>
+
+  <div class="sec-hd"><h2>👑 OFICIAIS</h2></div>
+  <div class="games-grid" id="official"></div>
+
+  <div class="sec-hd"><h2>🎮 COMO FUNCIONA</h2></div>
+  <div class="how-grid">
+    <div class="how-card"><div class="num">01</div><h4>Jogue</h4><p>Escolha um jogo do feed e colete custards para ganhar recompensas reais.</p></div>
+    <div class="how-card"><div class="num">02</div><h4>Customize</h4><p>Gaste seus Custards no Mercado para desbloquear corpos, rostos, chapéus e efeitos.</p></div>
+    <div class="how-card"><div class="num">03</div><h4>Crie</h4><p>Abra o Studio 3D e monte seu próprio mundo. Importe modelos GLB e escreva scripts em tempo real.</p></div>
+    <div class="how-card"><div class="num">04</div><h4>Compartilhe</h4><p>Publique seu jogo com um clique. Qualquer pessoa na plataforma pode jogar.</p></div>
   </div>
+</div>
+
 </main>
 <script src="core.js"></script>
 <script src="shared.js"></script>
@@ -32,6 +107,7 @@
 (function () {
   let mode = 'login';
   const $ = id => document.getElementById(id);
+
   function renderAuth() {
     $('aMsg').textContent = '';
     $('aTitle').textContent = mode === 'login' ? 'ENTRAR' : 'CRIAR CONTA';
@@ -51,43 +127,68 @@
   };
   ['aUser','aPass','aEmail'].forEach(id => $(id).addEventListener('keydown', ev => { if (ev.key === 'Enter') $('aBtn').click(); }));
 
+  const COLORS = ['#7b2fbe','#ff2222','#3fa14b','#e8d347','#e8b347','#4a1a72'];
+  const colorFor = (id) => COLORS[id.length % COLORS.length];
+  const CATEGORIES = ['Horror','Obby','Adventure','Puzzle','PvP','Simulator'];
+
   function gameCard(g) {
-    const colors = ['#7b2fbe','#ff2222','#3fa14b','#e8d347','#e8b347','#4a1a72'];
-    const bg = colors[g.name.length % colors.length];
+    const bg = colorFor(g.id);
     const initial = (g.name || '?')[0].toUpperCase();
-    return `<div class="game-card" onclick="play('${g.id}')">
-      <div class="game-thumb" style="background:linear-gradient(135deg,${bg},#1a1a26);"><span>${initial}</span></div>
-      <div class="game-info">
-        <h3 class="game-name">${escapeHTML(g.name)}</h3>
-        <div class="game-author">por @${escapeHTML(g.author)}</div>
-        <div class="game-stats"><span>▶ ${g.plays||0}</span><span>♥ ${g.likes||0}</span></div>
-        <span class="game-badge ${g.official?'official':''}">${g.official?'OFICIAL':'COMUNIDADE'}</span>
+    const cat = g.category || 'Adventure';
+    return `<div class="game-card-v5" onclick="play('${g.id}')">
+      <div class="game-thumb-v5" style="background:linear-gradient(135deg,${bg},#1a1a26);">
+        <span class="initial">${initial}</span>
       </div>
-      <button class="play-btn">▶ JOGAR</button>
+      <div class="game-info-v5">
+        <h3 class="game-name-v5">${escapeHTML(g.name)}</h3>
+        <div class="game-author-v5">por @${escapeHTML(g.author)}<span class="cat-badge">${cat}</span></div>
+        <div class="game-meta-v5">
+          <span class="stat">▶ ${g.plays||0}</span>
+          <span class="stat">♥ ${g.likes||0}</span>
+          ${g.official ? '<span style="color:var(--red);margin-left:auto;font-size:12px;letter-spacing:1px">OFICIAL</span>' : ''}
+        </div>
+      </div>
+      <button class="play-btn-v5">▶ JOGAR</button>
     </div>`;
   }
+
   window.play = function (id) {
     CORE.incrementPlays(id);
     CORE.setSelectedGame(id);
     location.href = 'engine.html';
   };
+
   function renderHome() {
     const games = CORE.getGames();
     const hero = games[0];
     if (hero) {
       $('hero').innerHTML = `
         <div class="hero-content">
-          <span class="hero-badge">⭐ DESTAQUE</span>
+          <span class="hero-eyebrow">⭐ DESTAQUE</span>
           <h2>${escapeHTML(hero.name)}</h2>
           <p>${escapeHTML(hero.description || 'Explore este mundo 3D.')}</p>
           <div class="hero-actions">
             <button class="btn primary" onclick="play('${hero.id}')">▶ JOGAR AGORA</button>
-            <button class="btn" onclick="location.href='descobrir.html'">Ver Todos</button>
+            <button class="btn" onclick="location.href='studio.html'">🛠 CRIAR MEU JOGO</button>
           </div>
         </div>`;
     }
-    $('featured').innerHTML = games.slice(0, 4).map(gameCard).join('');
-    $('recent').innerHTML = games.slice(4, 8).map(gameCard).join('') || '<div class="empty" style="grid-column:1/-1">Nenhum jogo recente. Crie no Studio!</div>';
+    // Stats bar
+    const totalGames = games.length;
+    const totalPlays = games.reduce((s,g) => s + (g.plays||0), 0);
+    const u = CORE.getCurrentUser();
+    const totalCustards = CORE.getCustards();
+    const myGames = CORE.getMyGames().length;
+    $('statsBar').innerHTML = `
+      <div class="stat-cell"><div class="stat-num">${totalGames}</div><div class="stat-lbl">JOGOS</div></div>
+      <div class="stat-cell"><div class="stat-num">${totalPlays}</div><div class="stat-lbl">PARTIDAS</div></div>
+      <div class="stat-cell"><div class="stat-num" style="color:var(--gold);text-shadow:0 0 12px rgba(232,179,71,.5)">${totalCustards}</div><div class="stat-lbl">SEUS CUSTARDS</div></div>
+      <div class="stat-cell"><div class="stat-num" style="color:var(--purple)">${myGames}</div><div class="stat-lbl">SEUS JOGOS</div></div>
+    `;
+    $('featured').innerHTML = games.slice(0, 4).map(gameCard).join('') || '<div class="empty" style="grid-column:1/-1">Sem jogos ainda. Crie no Studio!</div>';
+    $('recent').innerHTML = games.slice(4, 8).map(gameCard).join('') || '<div class="empty" style="grid-column:1/-1">Nenhum jogo recente.</div>';
+    const officials = games.filter(g => g.official);
+    $('official').innerHTML = officials.length ? officials.map(gameCard).join('') : '<div class="empty" style="grid-column:1/-1">Sem jogos oficiais.</div>';
   }
 
   function route() {
