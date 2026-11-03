@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CustardBricks 3D — Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<style>
+  :root {
+    --bg: #0a0a10;
+    --bg2: #12121c;
+    --bg3: #1a1a26;
+    --red: #ff2222;
+    --red-dark: #a01515;
+    --purple: #7b2fbe;
+    --purple-dark: #4a1a72;
+    --text: #d8d0e0;
+    --text-dim: #8a839a;
+    --border: #2a2a3a;
+    --warn: #e8d347;
+    --ok: #3fa14b;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--bg); color: var(--text);
+    font-family: 'VT323', monospace; font-size: 18px;
+    overflow: hidden;
+  }
+
+  /* Vinheta + Scanlines CRT */
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.75) 100%);
+    z-index: 9999;
+  }
+  body::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(to bottom,
+      rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px,
+      transparent 1px, transparent 3px);
+    z-index: 9998; mix-blend-mode: overlay;
+    animation: flicker 0.15s infinite;
+  }
+  @keyframes flicker { 0%{opacity:.92}50%{opacity:1}100%{opacity:.88} }
+
+  /* Layout */
+  .app {
+    display: grid;
+    grid-template-rows: 48px 1fr;
+    height: 100vh;
+  }
+  .topbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 14px;
+    background: var(--bg2);
+    border-bottom: 2px solid var(--border);
+  }
+  .topbar .logo {
+    font-size: 22px; letter-spacing: 1px; color: var(--red);
+    text-shadow: 0 0 8px var(--red-dark);
+    margin-right: 10px;
+  }
+  .topbar .logo span { color: var(--purple); }
+  .topbar input[type="text"] {
+    flex: 1; max-width: 320px; min-width: 140px;
+    padding: 5px 10px;
+    background: #06060a; border: 2px solid var(--border);
+    color: var(--text); font-family: 'VT323', monospace; font-size: 18px;
+    outline: none;
+  }
+  .topbar input[type="text"]:focus {
+    border-color: var(--red); box-shadow: 0 0 8px rgba(255,34,34,0.4);
+  }
+
+  .btn {
+    font-family: 'VT323', monospace; font-size: 18px;
+    padding: 5px 12px;
+    background: var(--bg3); color: var(--text);
+    border: 2px solid var(--border); cursor: pointer;
+    letter-spacing: 1px; transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--red); color: var(--red); box-shadow: 0 0 8px rgba(255,34,34,0.35); }
+  .btn.primary { background: var(--red-dark); border-color: var(--red); color: #fff; }
+  .btn.primary:hover { background: var(--red); box-shadow: 0 0 14px var(--red); }
+  .btn.ok { background: #1a5f24; border-color: var(--ok); color: #fff; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  .main {
+    display: grid;
+    grid-template-columns: 260px 1fr 320px;
+    overflow: hidden;
+  }
+
+  /* Painel lateral esquerdo: Toolbox */
+  .left-panel {
+    background: var(--bg2);
+    border-right: 2px solid var(--border);
+    overflow-y: auto;
+    padding: 10px;
+  }
+  .panel-title {
+    color: var(--purple);
+    font-size: 18px; letter-spacing: 2px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px; margin: 8px 0;
+  }
+  .tb-category { margin-bottom: 12px; }
+  .tb-category h4 {
+    color: var(--text-dim); font-size: 15px;
+    margin: 4px 0 6px; letter-spacing: 1px;
+  }
+  .tb-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; margin-bottom: 5px;
+    background: #06060a; border: 2px solid var(--border);
+    cursor: pointer; transition: all 0.15s;
+    user-select: none;
+  }
+  .tb-item:hover { border-color: var(--purple); box-shadow: 0 0 8px rgba(123,47,190,0.3); }
+  .tb-item .swatch {
+    width: 22px; height: 22px; border: 2px solid #000;
+    flex-shrink: 0;
+  }
+  .tb-item .name { font-size: 17px; }
+
+  /* Viewport */
+  .viewport {
+    position: relative;
+    background: #050508;
+    overflow: hidden;
+  }
+  canvas#canvas3d {
+    display: block; width: 100%; height: 100%;
+    filter: contrast(1.05) saturate(0.95);
+  }
+  .viewport-hint {
+    position: absolute; bottom: 10px; left: 12px;
+    color: var(--text-dim); font-size: 15px;
+    pointer-events: none; letter-spacing: 1px;
+    text-shadow: 0 0 4px #000;
+  }
+
+  /* Painel direito: Explorer + Properties */
+  .right-panel {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    background: var(--bg2);
+    border-left: 2px solid var(--border);
+    overflow: hidden;
+  }
+  .explorer-panel, .properties-panel {
+    overflow-y: auto;
+    padding: 10px;
+  }
+  .explorer-panel { border-bottom: 2px solid var(--border); }
+
+  .tree-node {
+    padding: 3px 6px; font-size: 16px;
+    cursor: pointer; border-radius: 2px;
+    color: var(--text-dim); user-select: none;
+    white-space: nowrap;
+  }
+  .tree-node:hover { background: rgba(123,47,190,0.15); color: var(--text); }
+  .tree-node.selected {
+    background: rgba(255,34,34,0.18);
+    color: var(--red);
+    border-left: 2px solid var(--red);
+    padding-left: 4px;
+  }
+  .tree-node .caret { color: var(--purple); display: inline-block; width: 14px; font-size: 12px; }
+  .tree-node .icon {
+    display: inline-block; width: 14px; height: 14px;
+    background: var(--purple); margin-right: 6px;
+    vertical-align: middle;
+  }
+  .tree-node.svc .icon { background: var(--red-dark); }
+
+  .prop-group { margin-bottom: 10px; }
+  .prop-group label {
+    display: block; font-size: 14px;
+    color: var(--text-dim); margin-bottom: 2px;
+    letter-spacing: 1px;
+  }
+  .prop-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px; margin-bottom: 6px;
+  }
+  .prop-row input[type="number"] {
+    width: 100%; padding: 4px 6px;
+    background: #06060a; border: 1px solid var(--border);
+    color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    outline: none;
+  }
+  .prop-row input:focus { border-color: var(--red); }
+  .prop-single input[type="text"], .prop-single input[type="color"] {
+    width: 100%; padding: 4px 6px;
+    background: #06060a; border: 1px solid var(--border);
+    color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    outline: none;
+  }
+  .prop-single input[type="color"] { height: 26px; padding: 2px; cursor: pointer; }
+  .prop-checkbox { display: flex; align-items: center; gap: 8px; font-size: 15px; margin-top: 4px; }
+  .prop-checkbox input { accent-color: var(--red); }
+
+  .prop-actions {
+    display: flex; gap: 6px; margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .empty-props { color: var(--text-dim); font-style: italic; text-align: center; padding: 20px 0; font-size: 15px; }
+
+  /* Modal Script */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: none; align-items: center; justify-content: center;
+    z-index: 10000;
+  }
+  .modal-bg.show { display: flex; animation: fadeIn 0.2s; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--bg2);
+    border: 2px solid var(--red);
+    width: 90%; max-width: 780px; max-height: 85vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 0 40px rgba(255,34,34,0.4);
+  }
+  .modal-header {
+    padding: 10px 16px;
+    border-bottom: 2px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .modal-header h2 { margin: 0; font-size: 22px; color: var(--red); letter-spacing: 2px; }
+  .modal-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); }
+  .modal-tab {
+    padding: 8px 16px; background: transparent; border: none;
+    border-bottom: 3px solid transparent; cursor: pointer;
+    color: var(--text-dim); font-family: 'VT323', monospace; font-size: 18px;
+  }
+  .modal-tab.active { color: var(--red); border-bottom-color: var(--red); }
+  .modal-body { padding: 16px; overflow-y: auto; flex: 1; }
+  .modal-footer {
+    padding: 10px 16px; border-top: 2px solid var(--border);
+    display: flex; gap: 8px; justify-content: flex-end;
+  }
+
+  /* Visual script editor */
+  .script-trigger {
+    margin-bottom: 14px; padding: 10px;
+    background: #06060a; border: 2px solid var(--purple);
+  }
+  .script-trigger label {
+    color: var(--purple); font-size: 16px;
+    letter-spacing: 1px; margin-right: 10px;
+  }
+  .script-trigger select, .script-action select, .script-action input {
+    background: #12121c; color: var(--text);
+    border: 1px solid var(--border); font-family: 'VT323', monospace;
+    font-size: 16px; padding: 4px 8px; outline: none;
+  }
+  .script-actions { display: flex; flex-direction: column; gap: 8px; }
+  .script-action {
+    display: flex; gap: 8px; align-items: center;
+    padding: 8px 10px;
+    background: #06060a; border-left: 3px solid var(--red);
+    flex-wrap: wrap;
+  }
+  .script-action input[type="number"] { width: 70px; }
+  .script-action input[type="text"] { flex: 1; min-width: 100px; }
+  .script-action .rm {
+    background: var(--red-dark); border: none;
+    color: #fff; padding: 2px 8px; cursor: pointer;
+    font-family: 'VT323', monospace; font-size: 14px;
+  }
+  .add-action-btn {
+    align-self: flex-start;
+    margin-top: 8px;
+  }
+
+  textarea.luau-input {
+    width: 100%; min-height: 300px;
+    background: #06060a; color: #d8d0e0;
+    border: 2px solid var(--border);
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    padding: 10px; outline: none; resize: vertical;
+  }
+  textarea.luau-input:focus { border-color: var(--red); }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(120px);
+    background: var(--bg2); border: 2px solid var(--red);
+    padding: 10px 20px; z-index: 10001;
+    transition: transform 0.3s;
+    box-shadow: 0 0 20px rgba(255,34,34,0.5);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.ok { border-color: var(--ok); box-shadow: 0 0 20px rgba(63,161,75,0.5); }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 200px 1fr 260px; }
+  }
+  @media (max-width: 700px) {
+    .main { grid-template-columns: 1fr; grid-template-rows: 200px 1fr 200px; }
+    .left-panel, .right-panel { border: none; border-top: 2px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= TOP BAR ================= -->
+  <header class="topbar">
+    <div class="logo">STUDIO<span>3D</span></div>
+    <input type="text" id="gameName" placeholder="Nome do jogo..." maxlength="40" />
+    <button class="btn" id="newBtn">+ NOVO</button>
+    <button class="btn" id="loadBtn">📁 CARREGAR</button>
+    <button class="btn" id="saveLocalBtn">💾 SALVAR</button>
+    <button class="btn ok" id="playBtn">▶ PLAY</button>
+    <button class="btn" id="stopBtn" style="display:none;">■ STOP</button>
+    <button class="btn primary" id="publishBtn">🚀 PUBLICAR</button>
+    <button class="btn" id="backBtn">← LOBBY</button>
+  </header>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main">
+
+    <!-- TOOLBOX -->
+    <aside class="left-panel">
+      <div class="panel-title">TOOLBOX</div>
+      <div id="toolboxRoot"></div>
+      <div class="panel-title" style="margin-top:16px;">AÇÕES</div>
+      <button class="btn" id="deleteSelBtn" style="width:100%;margin-bottom:6px;">🗑 DELETAR SELEÇÃO</button>
+      <button class="btn" id="focusSelBtn" style="width:100%;margin-bottom:6px;">🎯 FOCAR SELEÇÃO</button>
+      <button class="btn" id="resetCamBtn" style="width:100%;">🎥 RESET CÂMERA</button>
+    </aside>
+
+    <!-- VIEWPORT -->
+    <div class="viewport">
+      <canvas id="canvas3d"></canvas>
+      <div class="viewport-hint">
+        🖱 Roda: zoom · 🖱 Direito: orbitar · WASD: mover câmera · Clique: selecionar
+      </div>
+    </div>
+
+    <!-- EXPLORER + PROPERTIES -->
+    <aside class="right-panel">
+      <div class="explorer-panel">
+        <div class="panel-title">EXPLORER</div>
+        <div id="explorerRoot"></div>
+      </div>
+      <div class="properties-panel">
+        <div class="panel-title">PROPERTIES</div>
+        <div id="propertiesRoot">
+          <div class="empty-props">Selecione um objeto no Explorer<br>ou clique no Viewport.</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ================= SCRIPT MODAL ================= -->
+<div class="modal-bg" id="scriptModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>SCRIPT — <span id="scriptTargetName" style="color:var(--purple);"></span></h2>
+      <button class="btn" id="scriptCloseBtn">✕</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" data-mode="visual">🧩 Blocos Visuais</button>
+      <button class="modal-tab" data-mode="luau">📜 Luau</button>
+    </div>
+    <div class="modal-body">
+      <div id="visualScriptPanel">
+        <div class="script-trigger">
+          <label>QUANDO:</label>
+          <select id="scriptTrigger">
+            <option value="OnTouch">Ao Tocar (OnTouch)</option>
+            <option value="OnClick">Ao Clicar (OnClick)</option>
+            <option value="OnSpawn">Ao Spawnar (OnSpawn)</option>
+          </select>
+        </div>
+        <div class="script-actions" id="scriptActions"></div>
+        <button class="btn add-action-btn" id="addActionBtn">+ ADICIONAR AÇÃO</button>
+      </div>
+      <div id="luauScriptPanel" style="display:none;">
+        <p style="color:var(--text-dim);margin-top:0;font-size:15px;">
+          Sintaxe suportada: <code>workspace.Obj.Prop = valor</code>,
+          <code>Vector3.new(x,y,z)</code>, <code>Color3.fromRGB(r,g,b)</code>,
+          <code>print(...)</code>, <code>Obj:Destroy()</code>.
+        </p>
+        <textarea class="luau-input" id="luauInput" placeholder="-- Exemplo:
+workspace.Custard1.Color = Color3.fromRGB(255, 0, 0)
+print('Mudou a cor!')"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="scriptCancelBtn">CANCELAR</button>
+      <button class="btn primary" id="scriptSaveBtn">💾 SALVAR SCRIPT</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="core3d.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ============================================================
+   Guard
+============================================================ */
+const Core = window.Custard3D;
+const user = Core.getCurrentUser();
+if (!user) { window.location.href = 'index.html'; }
+
+/* ============================================================
+   Three.js setup
+============================================================ */
+const canvas = document.getElementById('canvas3d');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a10);
+scene.fog = new THREE.Fog(0x0a0a10, 60, 180);
+
+const camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+camera.position.set(18, 18, 18);
+camera.lookAt(0, 0, 0);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.mouseButtons = {
+  LEFT: null,
+  MIDDLE: THREE.MOUSE.DOLLY,
+  RIGHT: THREE.MOUSE.ROTATE
+};
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.maxDistance = 120;
+controls.minDistance = 3;
+
+// Lights
+scene.add(new THREE.AmbientLight(0x6a6a8a, 0.65));
+const sun = new THREE.DirectionalLight(0xffffff, 1.15);
+sun.position.set(25, 40, 20);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -50;
+sun.shadow.camera.right = 50;
+sun.shadow.camera.top = 50;
+sun.shadow.camera.bottom = -50;
+scene.add(sun);
+
+// Hemisphere accent
+const hemi = new THREE.HemisphereLight(0x7b2fbe, 0x0a0a10, 0.35);
+scene.add(hemi);
+
+// Grid + axes
+const grid = new THREE.GridHelper(100, 100, 0x7b2fbe, 0x2a2a3a);
+grid.material.opacity = 0.55;
+grid.material.transparent = true;
+scene.add(grid);
+
+const axes = new THREE.AxesHelper(3);
+axes.position.y = 0.01;
+scene.add(axes);
+
+// Selection outline (BoxHelper)
+const selBox = new THREE.BoxHelper(new THREE.Object3D(), 0xff2222);
+selBox.visible = false;
+scene.add(selBox);
+
+/* ============================================================
+   Global state
+============================================================ */
+let model = null;
+let currentGameId = null;
+const meshMap = new Map();       // inst.id -> Object3D
+const reverseMap = new Map();    // Object3D.uuid -> inst
+let selected = null;
+let isPlayMode = false;
+let playPlayer = null;
+let playKeys = {};
+
+const W = () => canvas.clientWidth;
+const H = () => canvas.clientHeight;
+
+/* ============================================================
+   Mesh factory — from Instance3D to Three.js
+============================================================ */
+function buildMesh(inst) {
+  const props = inst.Properties;
+  const shape = props.Shape || 'Block';
+  const size = props.Size || new Core.Vector3(1, 1, 1);
+  const color = props.Color || new Core.Color3(0.6, 0.6, 0.6);
+  const colorHex = new THREE.Color(color.R, color.G, color.B);
+
+  if (shape === 'Slendytubby') {
+    const group = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.85 });
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.9, 2, 16), bodyMat);
+    body.position.y = 1;
+    group.add(body);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.75, 20, 20), bodyMat);
+    head.position.y = 2.4;
+    group.add(head);
+    const eyeMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 2 });
+    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 10), eyeMat);
+    eyeL.position.set(-0.28, 2.5, 0.62);
+    group.add(eyeL);
+    const eyeR = eyeL.clone();
+    eyeR.position.x = 0.28;
+    group.add(eyeR);
+    group.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    group.scale.set(size.X / 3, size.Y / 4, size.Z / 3);
+    return group;
+  }
+
+  let geo;
+  switch (shape) {
+    case 'Sphere':   geo = new THREE.SphereGeometry(0.5, 24, 24); break;
+    case 'Cylinder': geo = new THREE.CylinderGeometry(0.5, 0.5, 1, 24); break;
+    case 'Custard':  geo = new THREE.SphereGeometry(0.5, 24, 24); break;
+    case 'SpawnPoint':
+      geo = new THREE.CylinderGeometry(0.85, 0.85, 1, 24);
+      break;
+    case 'Block':
+    default:
+      geo = new THREE.BoxGeometry(1, 1, 1);
+  }
+  const mat = new THREE.MeshStandardMaterial({
+    color: colorHex,
+    roughness: 0.7,
+    metalness: 0.05,
+    emissive: shape === 'Custard' ? new THREE.Color(0xff9ed0).multiplyScalar(0.25) : new THREE.Color(0, 0, 0)
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  if (shape === 'SpawnPoint') {
+    // Marca verde translúcida
+    mesh.material.transparent = true;
+    mesh.material.opacity = 0.7;
+  }
+  return mesh;
+}
+
+function applyProps(inst) {
+  const mesh = meshMap.get(inst.id);
+  if (!mesh) return;
+  const p = inst.Properties;
+  const pos = p.Position || new Core.Vector3(0, 0, 0);
+  const size = p.Size || new Core.Vector3(1, 1, 1);
+  const rot = p.Rotation || new Core.Vector3(0, 0, 0);
+
+  mesh.position.set(pos.X, pos.Y, pos.Z);
+  mesh.rotation.set(
+    rot.X * Math.PI / 180,
+    rot.Y * Math.PI / 180,
+    rot.Z * Math.PI / 180
+  );
+
+  if (mesh.isGroup) {
+    // Slendytubby: scale já aplicada; só posição/rotação
+  } else {
+    mesh.scale.set(size.X, size.Y, size.Z);
+  }
+
+  const shape = p.Shape || 'Block';
+  if (p.Color && mesh.material && !mesh.isGroup) {
+    mesh.material.color.setRGB(p.Color.R, p.Color.G, p.Color.B);
+    if (shape === 'Custard') {
+      mesh.material.emissive.setRGB(p.Color.R * 0.3, p.Color.G * 0.3, p.Color.B * 0.3);
+    }
+  } else if (p.Color && mesh.isGroup) {
+    mesh.traverse(o => {
+      if (o.isMesh && !o.material.emissive) {
+        o.material.color.setRGB(p.Color.R, p.Color.G, p.Color.B);
+      }
+    });
+  }
+  if (p.Transparency !== undefined && mesh.material && !mesh.isGroup) {
+    mesh.material.transparent = p.Transparency > 0;
+    mesh.material.opacity = 1 - p.Transparency;
+  }
+}
+
+/* ============================================================
+   Scene building
+============================================================ */
+function clearSceneObjects() {
+  const remove = [];
+  scene.traverse(o => { if (o.userData.isPart) remove.push(o); });
+  remove.forEach(o => { if (o.parent) o.parent.remove(o); });
+  meshMap.clear();
+  reverseMap.clear();
+}
+
+function addInstanceToScene(inst) {
+  const mesh = buildMesh(inst);
+  mesh.userData.isPart = true;
+  mesh.userData.instId = inst.id;
+  meshMap.set(inst.id, mesh);
+  reverseMap.set(mesh.uuid, inst);
+  mesh.traverse(o => { if (o.isMesh) o.userData.instId = inst.id; });
+  applyProps(inst);
+  scene.add(mesh);
+  inst.attachThree(mesh);
+
+  // listeners
+  inst.on('propertyChanged', () => {
+    applyProps(inst);
+    if (selected === inst) updateSelectionBox();
+  });
+  inst.on('destroyed', () => {
+    const m = meshMap.get(inst.id);
+    if (m && m.parent) m.parent.remove(m);
+    meshMap.delete(inst.id);
+    reverseMap.delete(mesh.uuid);
+    if (selected === inst) { selected = null; renderProperties(); updateSelectionBox(); }
+    refreshExplorer();
+  });
+
+  inst.Children.forEach(addInstanceToScene);
+}
+
+function rebuildScene() {
+  clearSceneObjects();
+  if (!model) return;
+  model.Workspace.Children.forEach(addInstanceToScene);
+  refreshExplorer();
+}
+
+/* ============================================================
+   DataModel bootstrap
+============================================================ */
+function newDataModel() {
+  const dm = new Core.DataModel();
+  const floor = new Core.Part('Floor', 'Block');
+  floor.Properties.Size = new Core.Vector3(20, 0.5, 20);
+  floor.Properties.Position = new Core.Vector3(0, -0.25, 0);
+  floor.Properties.Color = new Core.Color3(0.2, 0.2, 0.25);
+  dm.Workspace.AddChild(floor);
+
+  const spawn = new Core.SpawnPoint('PlayerSpawn');
+  spawn.Properties.Position = new Core.Vector3(0, 0.1, 5);
+  dm.Workspace.AddChild(spawn);
+
+  return dm;
+}
+
+function loadGameData(gameJson) {
+  model = Core.deserializeDataModel(gameJson.dataModel || gameJson);
+  currentGameId = gameJson.id || null;
+  document.getElementById('gameName').value = gameJson.name || 'Meu Jogo';
+  rebuildScene();
+}
+
+/* ============================================================
+   Explorer
+============================================================ */
+function makeTreeNode(inst, depth) {
+  const el = document.createElement('div');
+  el.className = 'tree-node' + (inst === selected ? ' selected' : '') + (inst.ClassName.endsWith('Workspace') || ['Workspace','Lighting','Players','ReplicatedStorage','ServerStorage'].includes(inst.Name) && inst.Parent === null ? ' svc' : '');
+  el.style.paddingLeft = (6 + depth * 14) + 'px';
+  el.innerHTML =
+    `<span class="caret">${inst.Children.length ? '▾' : '·'}</span>` +
+    `<span class="icon"></span>${escapeHTML(inst.Name)}`;
+  el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    selectInstance(inst);
+  });
+  return el;
+}
+
+function refreshExplorer() {
+  const root = document.getElementById('explorerRoot');
+  root.innerHTML = '';
+  if (!model) return;
+  const services = [model.Workspace, model.Lighting, model.Players, model.ReplicatedStorage, model.ServerStorage];
+  services.forEach(svc => {
+    root.appendChild(makeTreeNode(svc, 0));
+    svc.Children.forEach(child => renderNodeRecursive(child, root, 1));
+  });
+}
+function renderNodeRecursive(inst, parentEl, depth) {
+  parentEl.appendChild(makeTreeNode(inst, depth));
+  inst.Children.forEach(c => renderNodeRecursive(c, parentEl, depth + 1));
+}
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+}
+
+/* ============================================================
+   Selection
+============================================================ */
+function selectInstance(inst) {
+  if (isPlayMode) return;
+  selected = inst;
+  refreshExplorer();
+  renderProperties();
+  updateSelectionBox();
+}
+
+function updateSelectionBox() {
+  if (!selected) { selBox.visible = false; return; }
+  const mesh = meshMap.get(selected.id);
+  if (!mesh) { selBox.visible = false; return; }
+  selBox.setFromObject(mesh);
+  selBox.visible = true;
+}
+
+/* ============================================================
+   Properties panel
+============================================================ */
+function renderProperties() {
+  const root = document.getElementById('propertiesRoot');
+  if (!selected) {
+    root.innerHTML = '<div class="empty-props">Selecione um objeto no Explorer<br>ou clique no Viewport.</div>';
+    return;
+  }
+  const p = selected.Properties;
+  const isPart = selected.ClassName === 'Part' || selected.ClassName === 'SpawnPoint';
+  const pos = p.Position || new Core.Vector3(0, 0, 0);
+  const size = p.Size || new Core.Vector3(1, 1, 1);
+  const color = p.Color ? p.Color.toHex() : '#8a8a8a';
+
+  root.innerHTML = `
+    <div class="prop-group">
+      <label>NAME</label>
+      <div class="prop-single">
+        <input type="text" id="propName" value="${escapeHTML(selected.Name)}" />
+      </div>
+    </div>
+    <div class="prop-group">
+      <label>POSITION (X, Y, Z)</label>
+      <div class="prop-row">
+        <input type="number" id="propPosX" step="0.1" value="${pos.X.toFixed(2)}" />
+        <input type="number" id="propPosY" step="0.1" value="${pos.Y.toFixed(2)}" />
+        <input type="number" id="propPosZ" step="0.1" value="${pos.Z.toFixed(2)}" />
+      </div>
+    </div>
+    <div class="prop-group">
+      <label>SIZE (X, Y, Z)</label>
+      <div class="prop-row">
+        <input type="number" id="propSizeX" step="0.1" min="0.1" value="${size.X.toFixed(2)}" />
+        <input type="number" id="propSizeY" step="0.1" min="0.1" value="${size.Y.toFixed(2)}" />
+        <input type="number" id="propSizeZ" step="0.1" min="0.1" value="${size.Z.toFixed(2)}" />
+      </div>
+    </div>
+    <div class="prop-group">
+      <label>COLOR</label>
+      <div class="prop-single">
+        <input type="color" id="propColor" value="${color}" />
+      </div>
+    </div>
+    <div class="prop-group">
+      <label class="prop-checkbox">
+        <input type="checkbox" id="propAnchored" ${p.Anchored ? 'checked' : ''} />
+        Anchored (Física ativada = travado)
+      </label>
+    </div>
+    <div class="prop-actions">
+      <button class="btn" id="propAddScriptBtn">🧩 SCRIPT</button>
+      ${isPart && selected.ClassName === 'Part' ? '' : ''}
+    </div>
+  `;
+
+  // Listeners
+  const bind = (id, evt, fn) => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener(evt, fn);
+  };
+
+  bind('propName', 'change', e => {
+    selected.Name = e.target.value || selected.Name;
+    refreshExplorer();
+  });
+  bind('propPosX', 'input', e => setPos('x', parseFloat(e.target.value)));
+  bind('propPosY', 'input', e => setPos('y', parseFloat(e.target.value)));
+  bind('propPosZ', 'input', e => setPos('z', parseFloat(e.target.value)));
+  bind('propSizeX', 'input', e => setSize('x', parseFloat(e.target.value)));
+  bind('propSizeY', 'input', e => setSize('y', parseFloat(e.target.value)));
+  bind('propSizeZ', 'input', e => setSize('z', parseFloat(e.target.value)));
+  bind('propColor', 'input', e => {
+    selected.SetProperty('Color', Core.Color3.fromHex(e.target.value));
+    applyProps(selected);
+    updateSelectionBox();
+  });
+  bind('propAnchored', 'change', e => {
+    selected.SetProperty('Anchored', e.target.checked);
+  });
+  bind('propAddScriptBtn', 'click', () => openScriptModal(selected));
+
+  function setPos(axis, v) {
+    if (isNaN(v)) return;
+    const cur = selected.Properties.Position || new Core.Vector3(0, 0, 0);
+    const next = new Core.Vector3(cur.X, cur.Y, cur.Z);
+    next[axis.toUpperCase()] = v;
+    selected.SetProperty('Position', next);
+    applyProps(selected);
+    updateSelectionBox();
+  }
+  function setSize(axis, v) {
+    if (isNaN(v) || v < 0.05) return;
+    const cur = selected.Properties.Size || new Core.Vector3(1, 1, 1);
+    const next = new Core.Vector3(cur.X, cur.Y, cur.Z);
+    next[axis.toUpperCase()] = v;
+    selected.SetProperty('Size', next);
+    applyProps(selected);
+    updateSelectionBox();
+  }
+}
+
+/* ============================================================
+   Toolbox
+============================================================ */
+function renderToolbox() {
+  const root = document.getElementById('toolboxRoot');
+  root.innerHTML = '';
+  const cats = {};
+  Core.TOOLBOX.forEach(item => {
+    if (!cats[item.category]) cats[item.category] = [];
+    cats[item.category].push(item);
+  });
+  for (const cat in cats) {
+    const catEl = document.createElement('div');
+    catEl.className = 'tb-category';
+    catEl.innerHTML = `<h4>${escapeHTML(cat)}</h4>`;
+    cats[cat].forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'tb-item';
+      el.innerHTML = `
+        <div class="swatch" style="background:${item.defaultProps.Color};border-radius:${item.shape === 'Sphere' || item.shape === 'Custard' ? '50%' : '2px'};"></div>
+        <div class="name">${escapeHTML(item.name)}</div>
+      `;
+      el.title = 'Clique para instanciar no centro do mundo';
+      el.addEventListener('click', () => addFromToolbox(item));
+      catEl.appendChild(el);
+    });
+    root.appendChild(catEl);
+  }
+}
+
+function addFromToolbox(item) {
+  if (!model) return;
+  const inst = Core.createInstance(item.shape === 'SpawnPoint' ? 'SpawnPoint' : 'Part');
+  inst.Name = item.name + '_' + (model.findAll().length);
+
+  if (inst.Properties.Shape !== undefined) inst.Properties.Shape = item.shape;
+  const dp = item.defaultProps;
+  if (dp.Size) inst.Properties.Size = new Core.Vector3(dp.Size[0], dp.Size[1], dp.Size[2]);
+  if (dp.Color) inst.Properties.Color = Core.Color3.fromHex(dp.Color);
+  // spawn no centro
+  inst.Properties.Position = new Core.Vector3(0, (dp.Size ? dp.Size[1] / 2 : 0.5), 0);
+
+  model.Workspace.AddChild(inst);
+  addInstanceToScene(inst);
+  selectInstance(inst);
+  toast('Instanciado: ' + item.name, true);
+}
+
+/* ============================================================
+   Raycasting (click select in viewport)
+============================================================ */
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let mouseDownPos = null;
+
+canvas.addEventListener('mousedown', (e) => {
+  mouseDownPos = { x: e.clientX, y: e.clientY, btn: e.button };
+});
+canvas.addEventListener('mouseup', (e) => {
+  if (isPlayMode) return;
+  if (!mouseDownPos || mouseDownPos.btn !== 0) return;
+  const dx = Math.abs(e.clientX - mouseDownPos.x);
+  const dy = Math.abs(e.clientY - mouseDownPos.y);
+  if (dx > 4 || dy > 4) return; // drag, não clique
+
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const intersections = raycaster.intersectObjects(scene.children, true);
+  for (const hit of intersections) {
+    let obj = hit.object;
+    while (obj && !obj.userData.isPart && obj.parent) obj = obj.parent;
+    if (obj && obj.userData.instId) {
+      const inst = findInstanceById(model.Workspace, obj.userData.instId);
+      if (inst) { selectInstance(inst); return; }
+    }
+  }
+  // clique no vazio: deseleciona
+  selected = null;
+  refreshExplorer();
+  renderProperties();
+  updateSelectionBox();
+});
+
+function findInstanceById(root, id) {
+  if (root.id === id) return root;
+  for (const c of root.Children) {
+    const r = findInstanceById(c, id);
+    if (r) return r;
+  }
+  return null;
+}
+
+/* ============================================================
+   Camera WASD (pan)
+============================================================ */
+const wasd = { w: false, a: false, s: false, d: false, q: false, e: false };
+window.addEventListener('keydown', (e) => {
+  if (isPlayMode) { playKeys[e.key.toLowerCase()] = true; return; }
+  const k = e.key.toLowerCase();
+  if (['w','a','s','d','q','e'].includes(k)) {
+    wasd[k] = true;
+    // não previne se estiver digitando em input
+    if (!(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
+      e.preventDefault();
+    }
+  }
+});
+window.addEventListener('keyup', (e) => {
+  const k = e.key.toLowerCase();
+  if (k in wasd) wasd[k] = false;
+  if (isPlayMode) playKeys[k] = false;
+});
+
+function updateCameraPan(dt) {
+  const speed = (wasd.q || wasd.e) ? 25 : 12;
+  const dir = new THREE.Vector3();
+  // forward = direção da câmera no plano XZ
+  const forward = new THREE.Vector3();
+  camera.getWorldDirection(forward);
+  forward.y = 0; forward.normalize();
+  const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+
+  if (wasd.w) dir.add(forward);
+  if (wasd.s) dir.sub(forward);
+  if (wasd.d) dir.add(right);
+  if (wasd.a) dir.sub(right);
+  if (wasd.e) dir.y += 1;
+  if (wasd.q) dir.y -= 1;
+
+  if (dir.lengthSq() > 0) {
+    dir.normalize().multiplyScalar(speed * dt);
+    camera.position.add(dir);
+    controls.target.add(dir);
+  }
+}
+
+/* ============================================================
+   Animation loop
+============================================================ */
+let last = performance.now();
+function animate() {
+  requestAnimationFrame(animate);
+  const now = performance.now();
+  const dt = Math.min(0.1, (now - last) / 1000);
+  last = now;
+
+  if (!isPlayMode) updateCameraPan(dt);
+  else updatePlayMode(dt);
+
+  controls.update();
+  if (selected && !isPlayMode) updateSelectionBox();
+  renderer.render(scene, camera);
+}
+
+/* ============================================================
+   Resize
+============================================================ */
+function resize() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+setTimeout(resize, 50);
+
+/* ============================================================
+   Toast
+============================================================ */
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+function toast(msg, ok) {
+  toastEl.textContent = msg;
+  toastEl.classList.toggle('ok', !!ok);
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
+}
+
+/* ============================================================
+   Topbar actions
+============================================================ */
+document.getElementById('newBtn').addEventListener('click', () => {
+  if (!confirm('Criar novo jogo? O atual será descartado (não publicado).')) return;
+  model = newDataModel();
+  currentGameId = null;
+  document.getElementById('gameName').value = 'Meu Jogo';
+  rebuildScene();
+  toast('Novo jogo criado', true);
+});
+
+document.getElementById('loadBtn').addEventListener('click', () => {
+  const games = Core.getGames();
+  if (!games.length) { toast('Nenhum jogo salvo', false); return; }
+  const id = prompt('ID do jogo a carregar:\n\n' + games.map(g => g.id + ' — ' + g.name).join('\n'));
+  if (!id) return;
+  const g = Core.getGameById(id.trim());
+  if (!g) { toast('Jogo não encontrado', false); return; }
+  loadGameData(g);
+  toast('Carregado: ' + g.name, true);
+});
+
+document.getElementById('saveLocalBtn').addEventListener('click', () => {
+  if (!model) return;
+  const name = document.getElementById('gameName').value.trim() || 'Sem Nome';
+  const game = {
+    id: currentGameId || ('draft_' + Date.now()),
+    name,
+    author: user.nick,
+    official: false,
+    createdAt: Date.now(),
+    dataModel: Core.serializeDataModel(model)
+  };
+  Core.saveGame(game);
+  currentGameId = game.id;
+  toast('Salvo localmente', true);
+});
+
+document.getElementById('publishBtn').addEventListener('click', () => {
+  if (!model) return;
+  const name = document.getElementById('gameName').value.trim();
+  if (!name) { toast('Digite um nome', false); return; }
+  const res = Core.publishGame({ name, dataModel: model });
+  if (!res.ok) { toast(res.error, false); return; }
+  currentGameId = res.game.id;
+  toast('Publicado! Redirecionando...', true);
+  setTimeout(() => window.location.href = 'index.html', 1000);
+});
+
+document.getElementById('backBtn').addEventListener('click', () => {
+  window.location.href = 'index.html';
+});
+
+document.getElementById('deleteSelBtn').addEventListener('click', () => {
+  if (!selected) { toast('Nada selecionado', false); return; }
+  if (selected.ClassName === 'Workspace' || ['Workspace','Lighting','Players','ReplicatedStorage','ServerStorage'].includes(selected.Name)) {
+    toast('Não pode deletar um serviço', false); return;
+  }
+  selected.Destroy();
+  toast('Objeto removido', true);
+});
+
+document.getElementById('focusSelBtn').addEventListener('click', () => {
+  if (!selected) { toast('Nada selecionado', false); return; }
+  const mesh = meshMap.get(selected.id);
+  if (!mesh) return;
+  const box = new THREE.Box3().setFromObject(mesh);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3()).length();
+  const dist = Math.max(5, size * 2);
+  camera.position.copy(center).add(new THREE.Vector3(dist, dist, dist));
+  controls.target.copy(center);
+});
+
+document.getElementById('resetCamBtn').addEventListener('click', () => {
+  camera.position.set(18, 18, 18);
+  controls.target.set(0, 0, 0);
+});
+
+/* ============================================================
+   Play mode (simulação básica)
+============================================================ */
+document.getElementById('playBtn').addEventListener('click', () => {
+  if (!model) return;
+  enterPlayMode();
+});
+document.getElementById('stopBtn').addEventListener('click', () => {
+  exitPlayMode();
+});
+
+function enterPlayMode() {
+  isPlayMode = true;
+  document.getElementById('playBtn').style.display = 'none';
+  document.getElementById('stopBtn').style.display = '';
+  selBox.visible = false;
+
+  // encontra spawn
+  let spawnPos = new THREE.Vector3(0, 1, 0);
+  const walk = (n) => {
+    if (n.ClassName === 'SpawnPoint') {
+      const p = n.Properties.Position;
+      spawnPos.set(p.X, p.Y + 1, p.Z);
+      return true;
+    }
+    for (const c of n.Children) if (walk(c)) return true;
+    return false;
+  };
+  walk(model.Workspace);
+
+  // player capsule
+  const geo = new THREE.CapsuleGeometry(0.5, 1, 4, 12);
+  const mat = new THREE.MeshStandardMaterial({ color: 0x7b2fbe });
+  playPlayer = new THREE.Mesh(geo, mat);
+  playPlayer.position.copy(spawnPos);
+  playPlayer.castShadow = true;
+  playPlayer.userData.isPlayPlayer = true;
+  scene.add(playPlayer);
+
+  // HUD simples
+  const hud = document.createElement('div');
+  hud.id = 'playHud';
+  hud.style.cssText = 'position:fixed;top:60px;left:20px;background:rgba(10,10,16,0.8);border:2px solid #ff2222;padding:8px 14px;color:#d8d0e0;font-family:VT323,monospace;font-size:18px;z-index:9998;letter-spacing:1px;';
+  hud.textContent = '▶ PLAY — WASD para mover · ESC para parar';
+  document.body.appendChild(hud);
+
+  toast('Play mode ativado', true);
+}
+
+function exitPlayMode() {
+  isPlayMode = false;
+  document.getElementById('playBtn').style.display = '';
+  document.getElementById('stopBtn').style.display = 'none';
+  if (playPlayer) { scene.remove(playPlayer); playPlayer = null; }
+  const hud = document.getElementById('playHud');
+  if (hud) hud.remove();
+  toast('Editor restaurado', true);
+}
+
+function updatePlayMode(dt) {
+  if (!playPlayer) return;
+  const speed = 5;
+  const dir = new THREE.Vector3();
+  if (playKeys['w']) dir.z -= 1;
+  if (playKeys['s']) dir.z += 1;
+  if (playKeys['a']) dir.x -= 1;
+  if (playKeys['d']) dir.x += 1;
+  if (dir.lengthSq() > 0) {
+    dir.normalize().multiplyScalar(speed * dt);
+    playPlayer.position.x += dir.x;
+    playPlayer.position.z += dir.z;
+  }
+
+  // câmera segue
+  const target = playPlayer.position.clone().add(new THREE.Vector3(0, 1, 0));
+  controls.target.lerp(target, 0.15);
+
+  // colisão simples com Parts
+  const box = new THREE.Box3().setFromObject(playPlayer);
+  box.expandByScalar(-0.1);
+
+  model.Workspace.Children.forEach(inst => {
+    if (inst.ClassName !== 'Part') return;
+    if (!inst.Properties.CanCollide) return;
+    if (inst.Properties.Shape === 'Block' || inst.Properties.Shape === 'Sphere') {
+      const mesh = meshMap.get(inst.id);
+      if (!mesh) return;
+      const pbox = new THREE.Box3().setFromObject(mesh);
+      if (box.intersectsBox(pbox)) {
+        // trigger OnTouch
+        Core.triggerScripts(inst, 'OnTouch', model, {
+          onAddCoin: (n) => { Core.addCustards(n); toast('+' + n + ' Custards!', true); }
+        });
+      }
+    }
+  });
+}
+
+/* ============================================================
+   Script Modal
+============================================================ */
+let scriptTarget = null;
+let scriptMode = 'visual';
+let scriptActions = []; // array of action objects
+let scriptTrigger = 'OnTouch';
+let scriptLuauSource = '';
+
+function openScriptModal(inst) {
+  scriptTarget = inst;
+  document.getElementById('scriptTargetName').textContent = inst.Name;
+  // carrega primeiro script existente
+  scriptActions = [];
+  scriptLuauSource = '';
+  scriptTrigger = 'OnTouch';
+  if (inst.Scripts && inst.Scripts.length) {
+    const s = inst.Scripts[0];
+    if (s.type === 'visual') {
+      scriptTrigger = s.trigger || 'OnTouch';
+      scriptActions = JSON.parse(JSON.stringify(s.actions || []));
+    } else if (s.type === 'luau') {
+      scriptTrigger = s.trigger || 'OnTouch';
+      scriptLuauSource = s.source || '';
+    }
+  }
+  document.getElementById('scriptTrigger').value = scriptTrigger;
+  document.getElementById('luauInput').value = scriptLuauSource;
+  renderScriptActions();
+  switchScriptMode('visual');
+  document.getElementById('scriptModal').classList.add('show');
+}
+
+function closeScriptModal() {
+  document.getElementById('scriptModal').classList.remove('show');
+  scriptTarget = null;
+}
+
+document.getElementById('scriptCloseBtn').addEventListener('click', closeScriptModal);
+document.getElementById('scriptCancelBtn').addEventListener('click', closeScriptModal);
+
+document.querySelectorAll('.modal-tab').forEach(tab => {
+  tab.addEventListener('click', () => switchScriptMode(tab.dataset.mode));
+});
+
+function switchScriptMode(mode) {
+  scriptMode = mode;
+  document.querySelectorAll('.modal-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.mode === mode);
+  });
+  document.getElementById('visualScriptPanel').style.display = mode === 'visual' ? '' : 'none';
+  document.getElementById('luauScriptPanel').style.display = mode === 'luau' ? '' : 'none';
+}
+
+const ACTION_TYPES = [
+  { id: 'ChangeColor', name: '🎨 Mudar Cor', fields: [{ key: 'color', type: 'color', def: '#ff2222' }] },
+  { id: 'Move',        name: '↗ Mover',      fields: [
+    { key: 'x', type: 'number', def: 0, step: 0.5 },
+    { key: 'y', type: 'number', def: 0, step: 0.5 },
+    { key: 'z', type: 'number', def: 0, step: 0.5 }
+  ]},
+  { id: 'Destroy',     name: '💥 Destruir',  fields: [] },
+  { id: 'Print',       name: '📝 Print',     fields: [{ key: 'message', type: 'text', def: 'Hello' }] },
+  { id: 'AddCoin',     name: '💰 Add Custard', fields: [{ key: 'amount', type: 'number', def: 1 }] },
+  { id: 'Teleport',    name: '🌀 Teleportar', fields: [
+    { key: 'x', type: 'number', def: 0 },
+    { key: 'y', type: 'number', def: 0 },
+    { key: 'z', type: 'number', def: 0 }
+  ]}
+];
+
+function renderScriptActions() {
+  const root = document.getElementById('scriptActions');
+  root.innerHTML = '';
+  scriptActions.forEach((act, idx) => {
+    const meta = ACTION_TYPES.find(a => a.id === act.type);
+    if (!meta) return;
+    const el = document.createElement('div');
+    el.className = 'script-action';
+    el.innerHTML = `<span style="color:var(--red);font-weight:bold;">${meta.name}</span>`;
+    meta.fields.forEach(f => {
+      if (f.type === 'number') {
+        const inp = document.createElement('input');
+        inp.type = 'number';
+        inp.step = f.step || 1;
+        inp.value = act[f.key] ?? f.def;
+        inp.addEventListener('input', () => { act[f.key] = parseFloat(inp.value) || 0; });
+        el.appendChild(inp);
+      } else if (f.type === 'color') {
+        const inp = document.createElement('input');
+        inp.type = 'color';
+        inp.value = act[f.key] || f.def;
+        inp.addEventListener('input', () => { act[f.key] = inp.value; });
+        el.appendChild(inp);
+      } else {
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.value = act[f.key] ?? f.def;
+        inp.addEventListener('input', () => { act[f.key] = inp.value; });
+        el.appendChild(inp);
+      }
+    });
+    const rm = document.createElement('button');
+    rm.className = 'rm';
+    rm.textContent = '✕';
+    rm.addEventListener('click', () => { scriptActions.splice(idx, 1); renderScriptActions(); });
+    el.appendChild(rm);
+    root.appendChild(el);
+  });
+}
+
+document.getElementById('addActionBtn').addEventListener('click', () => {
+  const choice = prompt(
+    'Escolha uma ação:\n' +
+    ACTION_TYPES.map((a, i) => (i + 1) + '. ' + a.name).join('\n')
+  );
+  const idx = parseInt(choice) - 1;
+  if (isNaN(idx) || !ACTION_TYPES[idx]) return;
+  const meta = ACTION_TYPES[idx];
+  const obj = { type: meta.id };
+  meta.fields.forEach(f => { obj[f.key] = f.def; });
+  scriptActions.push(obj);
+  renderScriptActions();
+});
+
+document.getElementById('scriptTrigger').addEventListener('change', (e) => {
+  scriptTrigger = e.target.value;
+});
+
+document.getElementById('scriptSaveBtn').addEventListener('click', () => {
+  if (!scriptTarget) return;
+  scriptTarget.Scripts = [];
+  if (scriptMode === 'visual') {
+    if (scriptActions.length === 0) {
+      toast('Adicione ao menos uma ação', false); return;
+    }
+    scriptTarget.Scripts.push({
+      type: 'visual',
+      trigger: scriptTrigger,
+      actions: JSON.parse(JSON.stringify(scriptActions))
+    });
+  } else {
+    const src = document.getElementById('luauInput').value;
+    if (!src.trim()) { toast('Escreva algum código Luau', false); return; }
+    scriptTarget.Scripts.push({
+      type: 'luau',
+      trigger: scriptTrigger,
+      source: src
+    });
+    // executa imediatamente para efeito visual
+    try { Core.runLuauScript(src, model); }
+    catch (e) { console.warn(e); }
+  }
+  toast('Script salvo', true);
+  closeScriptModal();
+});
+
+/* ============================================================
+   Init
+============================================================ */
+(function init() {
+  renderToolbox();
+  // carrega primeiro jogo oficial (exemplo) se existir, senão new
+  const games = Core.getGames();
+  const official = games.find(g => g.official) || games[0];
+  if (official) {
+    loadGameData(official);
+  } else {
+    model = newDataModel();
+    rebuildScene();
+  }
+  renderProperties();
+  animate();
+})();
+</script>
+</body>
+</html>
